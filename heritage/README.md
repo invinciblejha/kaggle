@@ -1,0 +1,1 @@
+Stepwise regression/classification to find important variable. Naive Bayes?
