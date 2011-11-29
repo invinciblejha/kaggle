@@ -20,8 +20,7 @@ def get_counts_dict(path):
     
     return column_keys, counts_dict
 
-def show_counts(path): 
-    _, counts_dict = get_counts_dict(path)
+def show_counts(counts_dict): 
     
     patient_keys = list(counts_dict.keys())
     patient_keys.sort(key = lambda x: (-counts_dict[x], x))
@@ -30,6 +29,28 @@ def show_counts(path):
     print 'max = %d' % counts_dict[patient_keys[0]]
     print 'min = %d' % counts_dict[patient_keys[-1]]
     print 'mean = %f' % (sum(counts_dict.values())/len(counts_dict))
+
+OUTCOMES_FILE = 'DaysInHospital_Y2.csv'    
+def get_outcomes_dict():
+    data_reader = csv.reader(open(OUTCOMES_FILE , 'rb'), delimiter=',', quotechar='"')
+    column_keys = data_reader.next()
+    outcome_dict = {}
+    for row in data_reader:
+        patient_key = row[0]
+        outcome = int(row[2])
+        outcome_dict[patient_key] = outcome 
+    
+    return column_keys, outcome_dict
+    
+def plot_outcomes_vs_counts(counts_dict, outcomes_dict):
+    import matplotlib.pyplot as plt
+    
+    y = outcomes_dict.values()
+    x = [counts_dict.get(k, -1) for k in outcomes_dict.keys()]
+    
+    
+    plt.scatter(x, y)
+    plt.show()
     
 if __name__ == '__main__':
     import sys
@@ -40,8 +61,11 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
     path = args[0]
     
-    show_counts(path)
+    _, counts_dict = get_counts_dict(path)
+    _, outcomes_dict = get_outcomes_dict()
     
+    #show_counts(path)
+    plot_outcomes_vs_counts(counts_dict, outcomes_dict)
     
    
     
