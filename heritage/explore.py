@@ -6,17 +6,56 @@ import math
 import os
 import csv
 
+def _get_csv(path):
+    data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
+    column_keys = data_reader.next()
+    data_dict = {}
+    for row in data_reader:
+        patient_key = row[0]
+        data = row[1:]
+        data_dict[patient_key] = data_dict.get(patient_key, []) + [data]
+    return column_keys, data_dict
+    
+def get_csv(path):
+    import pickle
+    pickled_path = os.path.join('cache', path + '.pickle')
+    if not os.path.exists(pickled_path):
+        try:
+            os.mkdir('cache')
+        except:
+            pass
+        pkl_file = open(pickled_path , 'wb')
+        keys_dict = _get_csv(path)
+        pickle.dump(keys_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
+        pkl_file.close()
+    else:
+        pkl_file = open(pickled_path, 'rb')
+        keys_dict = pickle.load(pkl_file)
+        pkl_file.close() 
+            
+    return keys_dict 
+
+def get_csv_unique(path):
+    column_keys, data_dict = get_csv(path)
+    return column_keys, dict(zip(data_dict.keys(), [v[0] for v in data_dict.values()]))
+
 def get_counts_dict(path):
     """Read a Heritage .csv file 
         Top row is column keys. Left column is patient id in all .csv files 
     """
-    data_reader = csv.reader(open(path, 'rb'), delimiter=',', quotechar='"')
-    column_keys = data_reader.next()
-    counts_dict = {}
-    for row in data_reader:
-        patient_key = row[0]
-        patient_vals = row[1:]
-        counts_dict[patient_key] = counts_dict.get(patient_key, 0) + 1 
+    if False:
+        data_reader = csv.reader(open(path, 'rb'), delimiter=',', quotechar='"')
+        column_keys = data_reader.next()
+        counts_dict = {}
+        for row in data_reader:
+            patient_key = row[0]
+            patient_vals = row[1:]
+            counts_dict[patient_key] = counts_dict.get(patient_key, 0) + 1 
+    else:
+        column_keys, data_dict = get_csv(path)
+        counts_dict = {}
+        for k in data_dict.keys():
+             counts_dict[k] = counts_dict.get(k, 0) + 1 
     
     return column_keys, counts_dict
 
@@ -40,33 +79,11 @@ def show_counts(counts_dict):
     print 'min = %d' % counts_dict[patient_keys[-1]]
     print 'mean = %f' % (sum(counts_dict.values())/len(counts_dict))
 
-def _get_csv(path):
-    data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
-    column_keys = data_reader.next()
-    data_dict = {}
-    for row in data_reader:
-        patient_key = row[0]
-        data = row[1:]
-        data_dict[patient_key] = data
-    return column_keys, data_dict
-    
-def get_csv(path):
-    import pickle
-    pickled_path = path + '.pickle'
-    if not os.path.exists(pickled_path):
-        pkl_file = open(pickled_path , 'wb')
-        keys_dict = _get_csv(path)
-        pickle.dump(keys_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
-        pkl_file.close()
-    else:
-        pkl_file = open(pickled_path, 'rb')
-        keys_dict = pickle.load(pkl_file)
-        pkl_file.close()    
-    return keys_dict 
+
     
 OUTCOMES_FILE = 'DaysInHospital_Y2.csv'   
 def get_outcomes_dict():
-    column_keys, data_dict = get_csv(OUTCOMES_FILE)
+    column_keys, data_dict = get_csv_unique(OUTCOMES_FILE)
     outcomes_dict = {}
     for k,v in data_dict.items():
         outcomes_dict[k] = int(v[1])
