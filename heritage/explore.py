@@ -20,6 +20,16 @@ def get_counts_dict(path):
     
     return column_keys, counts_dict
 
+def summarize(title, a_list):
+    """Print some summary statistics about a_list"""
+    x = sorted(a_list)
+    print 'Summary %s:' % title
+    print 'min = %d' % x[0]
+    print 'max = %d' % x[-1]
+    print 'mean = %f' % (sum(x)/len(x))
+    print 'median = %d' % x[len(x)//2]
+    print  '-' * 40
+
 def show_counts(counts_dict): 
     
     patient_keys = list(counts_dict.keys())
@@ -44,12 +54,16 @@ def get_outcomes_dict():
     
 def plot_outcomes_vs_counts(counts_dict, outcomes_dict):
     import matplotlib.pyplot as plt
+    #from pylab import xlabel, ylabel
     
     y = outcomes_dict.values()
     x = [counts_dict.get(k, -1) for k in outcomes_dict.keys()]
     
-    
+    summarize('counts', x)
+    summarize('days in hospital', y)
     plt.scatter(x, y)
+    plt.xlabel('counts')
+    plt.ylabel('days in hospital')
     plt.show()
     
 if __name__ == '__main__':
