@@ -40,17 +40,37 @@ def show_counts(counts_dict):
     print 'min = %d' % counts_dict[patient_keys[-1]]
     print 'mean = %f' % (sum(counts_dict.values())/len(counts_dict))
 
-OUTCOMES_FILE = 'DaysInHospital_Y2.csv'    
-def get_outcomes_dict():
-    data_reader = csv.reader(open(OUTCOMES_FILE , 'rb'), delimiter=',', quotechar='"')
+def _get_csv(path):
+    data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
     column_keys = data_reader.next()
-    outcome_dict = {}
+    data_dict = {}
     for row in data_reader:
         patient_key = row[0]
-        outcome = int(row[2])
-        outcome_dict[patient_key] = outcome 
+        data = row[1:]
+        data_dict[patient_key] = data
+    return column_keys, data_dict
     
-    return column_keys, outcome_dict
+def get_csv(path):
+    import pickle
+    pickled_path = path + '.pickle'
+    if not os.path.exists(pickled_path):
+        pkl_file = open(pickled_path , 'wb')
+        keys_dict = _get_csv(path)
+        pickle.dump(keys_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
+        pkl_file.close()
+    else:
+        pkl_file = open(pickled_path, 'rb')
+        keys_dict = pickle.load(pkl_file)
+        pkl_file.close()    
+    return keys_dict 
+    
+OUTCOMES_FILE = 'DaysInHospital_Y2.csv'   
+def get_outcomes_dict():
+    column_keys, data_dict = get_csv(OUTCOMES_FILE)
+    outcomes_dict = {}
+    for k,v in data_dict.items():
+        outcomes_dict[k] = int(v[1])
+    return column_keys, outcomes_dict
     
 def plot_outcomes_vs_counts(counts_dict, outcomes_dict):
     import matplotlib.pyplot as plt
