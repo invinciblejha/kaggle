@@ -4,103 +4,114 @@ from __future__ import division
 """
 import math
 import os
+import random
+import re
 import csv
 
-def _get_csv(path):
+def get_csv(path):
     data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
     column_keys = data_reader.next()
-    data_dict = {}
-    for row in data_reader:
-        patient_key = row[0]
-        data = row[1:]
-        data_dict[patient_key] = data_dict.get(patient_key, []) + [data]
-    return column_keys, data_dict
     
-def get_csv(path):
-    import pickle
-    pickled_path = os.path.join('cache', path + '.pickle')
-    if not os.path.exists(pickled_path):
-        try:
-            os.mkdir('cache')
-        except:
-            pass
-        pkl_file = open(pickled_path , 'wb')
-        keys_dict = _get_csv(path)
-        pickle.dump(keys_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
-        pkl_file.close()
-    else:
-        pkl_file = open(pickled_path, 'rb')
-        keys_dict = pickle.load(pkl_file)
-        pkl_file.close() 
-            
-    return keys_dict 
-
-def get_csv_unique(path):
-    column_keys, data_dict = get_csv(path)
-    return column_keys, dict(zip(data_dict.keys(), [v[0] for v in data_dict.values()]))
-
-def get_counts_dict(path):
-    """Read a Heritage .csv file 
-        Top row is column keys. Left column is patient id in all .csv files 
-    """
-    if False:
-        data_reader = csv.reader(open(path, 'rb'), delimiter=',', quotechar='"')
-        column_keys = data_reader.next()
-        counts_dict = {}
+    def get_data():
         for row in data_reader:
             patient_key = row[0]
-            patient_vals = row[1:]
-            counts_dict[patient_key] = counts_dict.get(patient_key, 0) + 1 
-    else:
-        column_keys, data_dict = get_csv(path)
-        counts_dict = {}
-        for k in data_dict.keys():
-             counts_dict[k] = counts_dict.get(k, 0) + 1 
+            data = row[1:]
+            yield(patient_key, data)
+            
+    return column_keys, get_data
     
-    return column_keys, counts_dict
-
 def summarize(title, a_list):
     """Print some summary statistics about a_list"""
     x = sorted(a_list)
     print 'Summary %s:' % title
+    #print 'type = %s' % type(x)
+    print 'len = %d' % len(x)
     print 'min = %d' % x[0]
     print 'max = %d' % x[-1]
     print 'mean = %f' % (sum(x)/len(x))
     print 'median = %d' % x[len(x)//2]
     print  '-' * 40
 
-def show_counts(counts_dict): 
+def get_dict(filename, key=None, xform=int):
+    column_keys, get_data = get_csv(filename)
+    if not key:
+        return column_keys
     
-    patient_keys = list(counts_dict.keys())
-    patient_keys.sort(key = lambda x: (-counts_dict[x], x))
-    
-    print 'Counts'
-    print 'max = %d' % counts_dict[patient_keys[0]]
-    print 'min = %d' % counts_dict[patient_keys[-1]]
-    print 'mean = %f' % (sum(counts_dict.values())/len(counts_dict))
+    print 'filename=%s, key=%s, column_keys=%s' % (filename, key, column_keys)
+    assert(key in column_keys[1:])
+    column = column_keys[1:].index(key)
+    data_dict = {}
+    for k,v in get_data():
+        x = xform(v[column])
+        if x is not None:
+            data_dict[k] = x
+    return column_keys, data_dict
 
-
-    
 OUTCOMES_FILE = 'DaysInHospital_Y2.csv'   
 def get_outcomes_dict():
-    column_keys, data_dict = get_csv_unique(OUTCOMES_FILE)
-    outcomes_dict = {}
-    for k,v in data_dict.items():
-        outcomes_dict[k] = int(v[1])
+    column_keys, outcomes_dict = get_dict(OUTCOMES_FILE, 'DaysInHospital')
+    print 'outcomes_dict:', len(outcomes_dict)
     return column_keys, outcomes_dict
+
+MEMBERS_FILE = 'Members.csv' 
+MEMBERS_AGE_REGEX = re.compile(r'(\d+)[+-]')
+def get_member_age(s):
+    m = MEMBERS_AGE_REGEX.search(s)
+    if not m:
+        return None
+    return int(m.group(1))
     
-def plot_outcomes_vs_counts(counts_dict, outcomes_dict):
+def get_members_dict():
+    column_keys, members_dict = get_dict(MEMBERS_FILE, 'AgeAtFirstClaim', get_member_age)
+    print 'members_dict:', len(members_dict)            
+    return column_keys, members_dict
+
+def get_annotated_data(filename, key=None, xform=int):
+    column_keys, data_dict = get_dict(filename, key, xform)
+    return {'filename':filename, 'column':key, 'data':data_dict}
+ 
+def jitter(x,y):
+    dx = max(x) - min(x)
+    dy = max(y) - min(y)
+    assert(dx > 0)
+    assert(dy > 0)
+    d = math.sqrt(float(dx^2 + dy^2))
+    print 'dx=%d,dy=%d,d=%f' % (dx,dy,d)
+    assert(d > 0)
+    F = 1.0/15.0
+    fx = F*dx/d
+    fy = F*dy/d
+    
+    def j(xx, yy):
+        r = random.random() * d
+        t = random.random() * 2.0 * math.pi
+        return xx+r*math.cos(t)*fx, yy+r*math.sin(t)*fy
+    
+    xy = [j(x[i],y[i]) for i in range(len(x))]    
+    return zip(*xy)
+    
+def plot_outcomes_vs_counts(annotated_data_x, annotated_data_y):
     import matplotlib.pyplot as plt
-    #from pylab import xlabel, ylabel
+   
+    data_x = annotated_data_x['data']
+    data_y = annotated_data_y['data']
+    label_x = '%s:%s'%(annotated_data_x['filename'], annotated_data_x['column'])
+    label_y = '%s:%s'%(annotated_data_y['filename'], annotated_data_y['column'])
     
-    y = outcomes_dict.values()
-    x = [counts_dict.get(k, -1) for k in outcomes_dict.keys()]
+    summarize(label_x, data_x.values())
+    summarize(label_y, data_y.values())
     
-    summarize('counts', x)
-    summarize('days in hospital', y)
-    plt.scatter(x, y)
-    plt.xlabel('counts')
-    plt.ylabel('days in hospital')
+    keys = set(data_x.keys()) & set(data_y.keys())
+    x = [data_x[k] for k in keys]
+    y = [data_y[k] for k in keys] 
+    x,y = jitter(x,y)
+    
+    for ad,z in ((annotated_data_x,x), (annotated_data_y,y)):
+        summarize('%s:%s'%(ad['filename'], ad['column']), z)
+    plt.scatter(x, y, s=1,  lw = 0)
+    
+    plt.xlabel('%s:%s'%(annotated_data_x['filename'], annotated_data_x['column']))
+    plt.ylabel('%s:%s'%(annotated_data_y['filename'], annotated_data_y['column']))
     plt.show()
     
 if __name__ == '__main__':
@@ -110,13 +121,15 @@ if __name__ == '__main__':
     parser = optparse.OptionParser('python ' + sys.argv[0] + ' options <file name>')
     #parser.add_option('-r', '--ratio', dest='ratio', default='1.0', help='resampling ratio')
     (options, args) = parser.parse_args()
-    path = args[0]
     
-    _, counts_dict = get_counts_dict(path)
-    _, outcomes_dict = get_outcomes_dict()
+    #_, outcomes_dict = get_outcomes_dict()
+    #_, members_dict = get_members_dict()
+    
+    ad_age_at_first_claim = get_annotated_data(MEMBERS_FILE, 'AgeAtFirstClaim', get_member_age)
+    ad_days_in_hospital = get_annotated_data(OUTCOMES_FILE, 'DaysInHospital')
     
     #show_counts(path)
-    plot_outcomes_vs_counts(counts_dict, outcomes_dict)
+    plot_outcomes_vs_counts(ad_age_at_first_claim, ad_days_in_hospital)
     
    
     
