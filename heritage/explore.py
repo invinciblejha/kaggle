@@ -267,7 +267,6 @@ def plot_histo(annotated_data_x, annotated_data_y1, annotated_data_y2 = None):
    
     plt.show()
     
-    
 TABLES_IN = [
     'DrugCount.csv',
     #   DSFS seems to be an effect
@@ -346,27 +345,141 @@ def get_map_function(table, column):
         return DEFAULT_MAP_FUNCTION
     return MAP_FUNCTIONS[table][column]
     
+
+def get_main_pcg_dict(filename):
+    column_keys, get_data = get_csv(filename)
+
+    pcg_column = column_keys[1:].index('PrimaryConditionGroup')
+    pcg_counts_dict = {}
+    pcg_keys = set([])
+    for k,v in get_data():
+        pcg = v[pcg_column]
+        pcg_keys.add(pcg)
+        pcg_counts_dict[k] = pcg_counts_dict.get(k, {})
+        pcg_counts_dict[k][pcg] = pcg_counts_dict[k].get(pcg, 0) + 1
+    
+    main_pcg_dict = {}
+    for patient_key, patient_pcgs in pcg_counts_dict.items():
+        highest_pcg_count = 0
+        for pcg in patient_pcgs.keys():
+            if patient_pcgs[pcg] >= highest_pcg_count:
+                main_pcg = pcg
+        main_pcg_dict[patient_key] = main_pcg
+        
+    return main_pcg_dict, pcg_keys    
+
+def get_max_key(a_dict):
+    max_val = 0
+    for k,v in a_dict.items():
+        if v >= max_val:
+            max_key = k
+            max_val = v
+    return max_key
+    
+PCG_LIST = [  
+    
+     'MISCL1',
+     'MISCL5',
+     'PRGNCY',
+     'ROAMI',
+     'RESPR4',
+     'FXDISLC',
+     'METAB3',
+     'GYNEC1',
+     'METAB1',
+     'NEUMENT',
+     'APPCHOL',
+     'ARTHSPIN',
+     'MSC2a3',
+     'TRAUMA',
+     'RENAL3',
+     'CANCRB',
+     'CANCRM',
+     'RENAL2',
+     'PERVALV',
+     'AMI',
+     'COPD',
+     'GIOBSENT',
+     'HEMTOL',
+     'UTI',
+     'CHF',
+     'GYNECA',
+     'STROKE',
+     'HEART2',
+     'GIBLEED',
+     'HEART4',
+     'LIVERDZ',
+     'CATAST',
+     'INFEC4',
+     'PNEUM',
+     'ODaBNCA',
+     'MISCHRT',
+     'SKNAUT',
+     'SEPSIS',
+     'HIPFX',
+     'SEIZURE',
+     'CANCRA',
+     'FLaELEC',
+     'PNCRDZ',
+     'RENAL1',
+     'PERINTL',
+]
+
+PCG_LUT = {}
+for i,pcg in enumerate(sorted(PCG_LIST)):
+    PCG_LUT[pcg] = i + 1
+
+def get_pcg_index(pcg):
+    if pcg in PCG_LUT.keys():
+        return PCG_LUT[pcg]
+    if pcg:
+        print "     '%s'" % pcg
+        exit()
+    return 0
+
 DERIVED_PREFIX = 'derived_'
-DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims'] 
+DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims', 'PrimaryConditionGroup'] 
      
 def make_derived_table(filename):
     column_keys, get_data = get_csv(filename)
 
     year_column = column_keys[1:].index('Year')
-    counts_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
-    for k,v in get_data():
-        counts_dict['ALL'][k] = counts_dict['ALL'].get(k, 0) + 1 
+    pcg_column = column_keys[1:].index('PrimaryConditionGroup')
+   
+    #pcg_keys = list(PCG_LUT.keys())
+    derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
+    for i,(k,v) in enumerate(get_data()):
         year = v[year_column]
-        counts_dict[year][k] = counts_dict[year].get(k, 0) + 1 
+        pcg = get_pcg_index(v[pcg_column])
+        #if not v[pcg_column] in pcg_keys:
+        #   pcg_keys.append(v[pcg_column])
+            #print '>', v[pcg_column]
+        #print '"%s" => %d' % (v[pcg_column], pcg)
         
-    derived_column_keys = ['MemberID', 'NumClaims']
-    for year in counts_dict:
+        if i % 1000 == 0:
+            print 'Processing row %d' % i
+
+        for y in (year, 'ALL'):
+            if not k in derived_dict[y].keys():
+                derived_dict[y][k] = [0, {}] 
+            derived_dict[y][k][0] += 1
+            derived_dict[y][k][1][pcg] = derived_dict[y][k][1].get(pcg, 0) + 1 
+
+    if False:
+        print '-' *80
+        for k in pcg_keys:
+            print "     '%s'," % k            
+        exit()  
+    
+    for year in derived_dict:
         derived_filename = '%s%s_%s' % (DERIVED_PREFIX, year, filename)
         data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
         data_writer.writerow(DERIVED_COLUMN_KEYS)
-        for k in sorted(counts_dict[year].keys(), key = lambda x: -counts_dict[year][x]):
-            v = counts_dict[year][k]
-            data_writer.writerow([k, str(v)])
+        for k in sorted(derived_dict[year].keys(), key = lambda x: -derived_dict[year][x][0]):
+            v1 = derived_dict[year][k][0]
+            v2 = get_max_key(derived_dict[year][k][1]) 
+            print ' ', derived_dict[year][k], v2
+            data_writer.writerow([k, str(v1), str(v2)])
 
 if __name__ == '__main__':
     import sys
@@ -419,7 +532,8 @@ if __name__ == '__main__':
         
     if options.derive_values_from:
         make_derived_table(options.derive_values_from)
-        
+    
+    y_table_column = y2_table_column = None
     if options.all_outputs:
         y_table_column = 'DaysInHospital_Y2.csv:DaysInHospital'
         y2_table_column = 'DaysInHospital_Y3.csv:DaysInHospital'

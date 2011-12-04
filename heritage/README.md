@@ -65,14 +65,14 @@ Some patients see many provider. These are not necessarily the same patients who
 
 C:\dev\kaggle\heritage>python explore.py -p Claims.csv:ProviderID
 get_counts_by_patient() Claims.csv : ProviderID column = 1
---------------------------------------------------------------------------------
+
 Summary "patient counts for Claims.csv : ProviderID":
 len = 113000
 min = 1
 max = 50
 mean = 6.901301
 median = 5
---------------------------------------------------------------------------------
+
 Max patient (count) = 39601022
       321261:  15
      8068884:  13
@@ -124,14 +124,14 @@ Max patient (count) = 39601022
      6436849:   1
       740314:   1
      4474226:   1
---------------------------------------------------------------------------------
+
 Summary "patient totals for Claims.csv : ProviderID":
 len = 113000
 min = 1
 max = 130
 mean = 23.619381
 median = 13
---------------------------------------------------------------------------------
+
 Max patient (total) = 2397235
      7053364: 126
      9331351:   4
