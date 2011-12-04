@@ -1,0 +1,158 @@
+--------------------------------------------------------------------------------
+SupLOS
+ 0:                         0 2657658
+ 1:                         1   11332
+Claims.csv : SupLOS has 2 unique entries in 2668990 total entries. Average 1334495.0
+--------------------------------------------------------------------------------
+Year
+ 0:                        Y3  904429
+ 1:                        Y2  898872
+ 2:                        Y1  865689
+Claims.csv : Year has 3 unique entries in 2668990 total entries. Average 889663.3
+--------------------------------------------------------------------------------
+CharlsonIndex
+ 0:                         0 1356995
+ 1:                       1-2 1256527
+ 2:                       3-4   49479
+ 3:                        5+    5989
+Claims.csv : CharlsonIndex has 4 unique entries in 2668990 total entries. Average 667247.5
+--------------------------------------------------------------------------------
+PlaceSvc
+ 0:                    Office 1542007
+ 1:           Independent Lab  657750
+ 2:               Urgent Care  199528
+ 3:       Outpatient Hospital  121528
+ 4:        Inpatient Hospital   85776
+ 5:                 Ambulance   34766
+ 6:                     Other   11700
+ 7:                      Home    8303
+ 8:                              7632
+Claims.csv : PlaceSvc has 9 unique entries in 2668990 total entries. Average 296554.4
+--------------------------------------------------------------------------------
+LengthOfStay
+ 0:                           2597392
+ 1:                     1 day   56696
+ 2:                    2 days    6485
+ 3:                    3 days    3246
+ 4:                    4 days    1473
+ 5:                1- 2 weeks    1143
+ 6:                2- 4 weeks     961
+ 7:                4- 8 weeks     903
+ 8:                    5 days     510
+ 9:                    6 days     179
+10:                 26+ weeks       2
+Claims.csv : LengthOfStay has 11 unique entries in 2668990 total entries. Average 242635.5
+--------------------------------------------------------------------------------
+DSFS
+ 0:                0- 1 month  707721
+ 1:               1- 2 months  247343
+ 2:               2- 3 months  225216
+ 3:               3- 4 months  212214
+ 4:               5- 6 months  192000
+ 5:               4- 5 months  189001
+ 6:               6- 7 months  180662
+ 7:               7- 8 months  175191
+ 8:               8- 9 months  171878
+ 9:               9-10 months  151527
+10:              10-11 months  116328
+11:                             52770
+12:              11-12 months   47139
+Claims.csv : DSFS has 13 unique entries in 2668990 total entries. Average 205306.9
+--------------------------------------------------------------------------------
+Specialty
+ 0:                  Internal  672059
+ 1:                Laboratory  653188
+ 2:          General Practice  473655
+ 3:                   Surgery  208217
+ 4:        Diagnostic Imaging  207297
+ 5:                 Emergency  126130
+ 6:                     Other   92687
+ 7:                Pediatrics   84862
+ 8:            Rehabilitation   57554
+ 9: Obstetrics and Gynecology   36594
+10:            Anesthesiology   33435
+11:                 Pathology   14907
+12:                              8405
+Claims.csv : Specialty has 13 unique entries in 2668990 total entries. Average 205306.9
+--------------------------------------------------------------------------------
+ProcedureGroup
+ 0:                        EM 1048210
+ 1:                        PL  492919
+ 2:                       MED  372101
+ 3:                       SCS  274805
+ 4:                       RAD  265272
+ 5:                       SDS   60678
+ 6:                       SIS   56461
+ 7:                       SMS   29177
+ 8:                      ANES   17061
+ 9:                       SGS    9406
+10:                      SEOA    8420
+11:                       SRS    7905
+12:                       SNS    7796
+13:                       SAS    5745
+14:                       SUS    5612
+15:                              3675
+16:                      SMCD    3376
+17:                        SO     371
+Claims.csv : ProcedureGroup has 18 unique entries in 2668990 total entries. Average 148277.2
+--------------------------------------------------------------------------------
+PrimaryConditionGroup
+ 0:                    MSC2a3  507277
+ 1:                    METAB3  320553
+ 2:                  ARTHSPIN  288285
+ 3:                   NEUMENT  171605
+ 4:                    RESPR4  138062
+ 5:                   MISCHRT  131047
+ 6:                    SKNAUT  107976
+ 7:                   GIBLEED  101846
+ 8:                    INFEC4   83552
+ 9:                    TRAUMA   72050
+10:                    HEART2   54207
+11:                    RENAL3   52214
+12:                     ROAMI   48821
+13:                    MISCL5   48307
+14:                   ODaBNCA   46732
+15:                       UTI   44806
+16:                      COPD   44154
+17:                    GYNEC1   44143
+18:                    CANCRB   42895
+19:                   FXDISLC   40851
+20:                       AMI   34805
+21:                    PRGNCY   32004
+22:                    HEMTOL   31631
+23:                    HEART4   28733
+24:                   SEIZURE   20501
+25:                   APPCHOL   17945
+26:                       CHF   13316
+27:                    GYNECA   12491
+28:                             11410
+29:                     PNEUM   11333
+30:                    RENAL2   10922
+31:                  GIOBSENT    9718
+32:                    STROKE    8416
+33:                    CANCRA    5587
+34:                   FLaELEC    5263
+35:                    MISCL1    4892
+36:                     HIPFX    4355
+37:                    METAB1    3863
+38:                   PERVALV    3518
+39:                   LIVERDZ    2747
+40:                    CATAST    2070
+41:                    CANCRM    1096
+42:                   PERINTL     980
+43:                    PNCRDZ     912
+44:                    RENAL1     602
+45:                    SEPSIS     497
+Claims.csv : PrimaryConditionGroup has 46 unique entries in 2668990 total entries. Average 58021.5
+--------------------------------------------------------------------------------
+PayDelay
+Claims.csv : PayDelay has 163 unique entries in 2668990 total entries. Average 16374.2
+--------------------------------------------------------------------------------
+PCP
+Claims.csv : PCP has 1360 unique entries in 2668990 total entries. Average 1962.5
+--------------------------------------------------------------------------------
+Vendor
+Claims.csv : Vendor has 6388 unique entries in 2668990 total entries. Average 417.8
+--------------------------------------------------------------------------------
+ProviderID
+Claims.csv : ProviderID has 14700 unique entries in 2668990 total entries. Average 181.6
