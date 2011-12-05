@@ -24,28 +24,32 @@ References
 
 Findings
 ========
+Interesting how majority pcg tends to stick. Seems to be a reliable attribute.
 
-Interesting how majority pcg tends to stick. Seems to be a reliable attribute
 python explore.py -x derived_Y1_Claims.csv:PrimaryConditionGroup -y  derived_Y2_Claims.csv:PrimaryConditionGroup
 python explore.py -x derived_Y2_Claims.csv:PrimaryConditionGroup -y  derived_Y3_Claims.csv:PrimaryConditionGroup
 
 Effects
 -------
 * DrugCount.csv
+
 ** DSFS seems to be an effect
 ** DrugCount seems to be an effect (more in Y3?)
 
 * LabCount.csv
+
 ** 'Year' could be an effect 
 ** DSFS seems to be an effect
 ** LabCount seems to an effect (more in Y3?)
 
 * Members.csv
+
 ** AgeAtFirstClaim seems to a strong effect for Y2 and Y3 
 ** Sex could be an effect 
 ** ClaimsTruncated seems to a strong effect
   
 * derived_Claims.csv
+
 ** NumClaims is an effect
 
 Counts
