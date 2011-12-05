@@ -17,8 +17,8 @@ LOWESS
 
 References
 ==========
-http://www.quora.com/Netflix-Prize/Is-there-any-summary-of-top-models-for-the-Netflix-prize
-http://strataconf.com/strata2012/public/schedule/detail/22658
+* http://www.quora.com/Netflix-Prize/Is-there-any-summary-of-top-models-for-the-Netflix-prize
+* http://strataconf.com/strata2012/public/schedule/detail/22658
 * Lasso and elastic-net regularized GLMs eg. "glmnet"
 * Random Forests
 
@@ -32,25 +32,24 @@ python explore.py -x derived_Y2_Claims.csv:PrimaryConditionGroup -y  derived_Y3_
 Effects
 -------
 * DrugCount.csv
-**    DSFS seems to be an effect
-**    DrugCount seems to be an effect (more in Y3?)
- 
+** DSFS seems to be an effect
+** DrugCount seems to be an effect (more in Y3?)
+
 * LabCount.csv
-**    'Year' could be an effect 
-**    DSFS seems to be an effect
-**    LabCount seems to an effect (more in Y3?)
-   
+** 'Year' could be an effect 
+** DSFS seems to be an effect
+** LabCount seems to an effect (more in Y3?)
+
 * Members.csv
-**    AgeAtFirstClaim seems to a strong effect for Y2 and Y3 
-**    Sex could be an effect "
-**    ClaimsTruncated seems to a strong effect
+** AgeAtFirstClaim seems to a strong effect for Y2 and Y3 
+** Sex could be an effect 
+** ClaimsTruncated seems to a strong effect
   
-*  derived_Claims.csv
-**    NumClaims is an effect
+* derived_Claims.csv
+** NumClaims is an effect
 
 Counts
 ------
-
 C:\dev\kaggle\heritage>python explore.py DaysInHospital_Y2.csv
 Counts
 max = 1
