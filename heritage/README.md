@@ -1,3 +1,15 @@
+Goals
+=====
+Predict Y4 results.
+
+TODO
+====
+* Compare regressing Y1=>Y2 and Y2=>Y3 to (Y1,Y2)=>Y3 to estimate importance of effects from 2 years ago
+* Esitmate random noise to see how import effects are
+* Measure pcg diversity within years
+* Repeat PrimaryConditionGroup analysis for ProcedureGroup
+* Find correlation between PrimaryConditionGroup and ProcedureGroup
+
 Techniques
 ==========
 Stepwise regression/classification to find important variable. Naive Bayes?
@@ -12,6 +24,30 @@ http://strataconf.com/strata2012/public/schedule/detail/22658
 
 Findings
 ========
+
+Interesting how majority pcg tends to stick. Seems to be a reliable attribute
+python explore.py -x derived_Y1_Claims.csv:PrimaryConditionGroup -y  derived_Y2_Claims.csv:PrimaryConditionGroup
+python explore.py -x derived_Y2_Claims.csv:PrimaryConditionGroup -y  derived_Y3_Claims.csv:PrimaryConditionGroup
+
+Effects
+-------
+ DrugCount.csv
+    DSFS seems to be an effect
+    DrugCount seems to be an effect (more in Y3?)
+ 
+ LabCount.csv
+    'Year' could be an effect 
+    DSFS seems to be an effect
+    LabCount seems to an effect (more in Y3?)
+   
+ Members.csv
+    AgeAtFirstClaim seems to a strong effect for Y2 and Y3 
+    Sex could be an effect "
+    ClaimsTruncated seems to a strong effect
+  
+  derived_Claims.csv
+    NumClaims is an effect
+
 
 Counts
 ------

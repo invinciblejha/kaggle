@@ -380,8 +380,8 @@ def get_max_key(a_dict):
             max_val = v
     return max_key
     
+# See pcg.key and Lookup ProcedureGroup.csv   
 PCG_LIST = [  
-    
      'MISCL1',
      'MISCL5',
      'PRGNCY',
@@ -436,9 +436,7 @@ for i,pcg in enumerate(sorted(PCG_LIST)):
 def get_pcg_index(pcg):
     if pcg in PCG_LUT.keys():
         return PCG_LUT[pcg]
-    if pcg:
-        print "     '%s'" % pcg
-        exit()
+    assert(not pcg)
     return 0
 
 def make_group_name(group):
@@ -448,6 +446,10 @@ DERIVED_PREFIX = 'derived_'
 DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims', 'PrimaryConditionGroup'] 
      
 def make_derived_table(filename):
+    """This has got complicated due to python running slowing with large dicts
+        Passes through input file multiple times and writes partial results to 
+        disk (see group).
+    """
     column_keys, get_data = get_csv(filename)
 
     year_column = column_keys[1:].index('Year')
@@ -591,6 +593,8 @@ if __name__ == '__main__':
         if y2_table_column:
             y2_table, y2_column = y2_table_column.split(':')
             y2_data = get_annotated_data(y2_table, y2_column, get_map_function(y2_table, y2_column))
+        else:
+            y2_data = None
 
         if options.x_table_column:
             x_table, x_column = options.x_table_column.split(':')
