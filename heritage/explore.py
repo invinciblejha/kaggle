@@ -1,12 +1,16 @@
 from __future__ import division
 """
     Explore Heritage .csv files
+    
+    Claims.csv 2,668,990 rows
 """
 import math
 import os
 import random
 import re
 import csv
+import time
+import pickle
 
 def HEADING():
     print  '=' * 80
@@ -437,6 +441,9 @@ def get_pcg_index(pcg):
         exit()
     return 0
 
+def make_group_name(group):
+    return os.path.join('CACHE', 'group%04d.pkl' % group)
+    
 DERIVED_PREFIX = 'derived_'
 DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims', 'PrimaryConditionGroup'] 
      
@@ -447,23 +454,59 @@ def make_derived_table(filename):
     pcg_column = column_keys[1:].index('PrimaryConditionGroup')
    
     #pcg_keys = list(PCG_LUT.keys())
-    derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
-    for i,(k,v) in enumerate(get_data()):
-        year = v[year_column]
-        pcg = get_pcg_index(v[pcg_column])
-        #if not v[pcg_column] in pcg_keys:
-        #   pcg_keys.append(v[pcg_column])
-            #print '>', v[pcg_column]
-        #print '"%s" => %d' % (v[pcg_column], pcg)
-        
-        if i % 1000 == 0:
-            print 'Processing row %d' % i
+    
+    t0 = time.clock()
+    
+    NUM_GROUPS = 100
+    num_rows = 0
+    for group in range(NUM_GROUPS):
+        derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
+        print 'group=%d' % group
+        _, get_data = get_csv(filename)
+        for k,v in get_data():
+            if (int(k) % NUM_GROUPS) != group:
+                continue
+            year = v[year_column]
+            pcg = get_pcg_index(v[pcg_column])
+            #if not v[pcg_column] in pcg_keys:
+            #   pcg_keys.append(v[pcg_column])
+                #print '>', v[pcg_column]
+            #print '"%s" => %d' % (v[pcg_column], pcg)
+            
+            if num_rows and num_rows % 10000 == 0:
+                t = time.clock() - t0
+                eta  = int(t * (2668990 - num_rows)/num_rows)
+                print ' %8d row (%4.1f%%) %7.1f sec, %4d rows/sec, eta = %6d sec' % (num_rows, 
+                    100.0 * num_rows/2668990, t, int(num_rows/t), eta) 
 
-        for y in (year, 'ALL'):
-            if not k in derived_dict[y].keys():
-                derived_dict[y][k] = [0, {}] 
-            derived_dict[y][k][0] += 1
-            derived_dict[y][k][1][pcg] = derived_dict[y][k][1].get(pcg, 0) + 1 
+            for y in (year, 'ALL'):
+                if not k in derived_dict[y].keys():
+                    derived_dict[y][k] = [0, {}] 
+                derived_dict[y][k][0] += 1
+                derived_dict[y][k][1][pcg] = derived_dict[y][k][1].get(pcg, 0) + 1 
+                
+            num_rows += 1
+        
+        print 'Coallescing'       
+        for year in derived_dict:
+            for k in derived_dict[year].keys():
+                if int(k) % NUM_GROUPS != group:
+                    continue
+                derived_dict[year][k][1] = get_max_key(derived_dict[year][k][1]) 
+        pickled_path = make_group_name(group)            
+        pkl_file = open(pickled_path , 'wb')
+        pickle.dump(derived_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
+        pkl_file.close()  
+
+    derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}    
+    for group in range(NUM_GROUPS):
+        pickled_path = make_group_name(group)            
+        pkl_file = open(pickled_path , 'rb')
+        part_dict = pickle.load(pkl_file)   
+        pkl_file.close()
+        for y,d in part_dict.items():
+            for k,v in d.items():
+                derived_dict[y][k] = (part_dict[y][k][0], part_dict[y][k][1]) 
 
     if False:
         print '-' *80
@@ -475,11 +518,10 @@ def make_derived_table(filename):
         derived_filename = '%s%s_%s' % (DERIVED_PREFIX, year, filename)
         data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
         data_writer.writerow(DERIVED_COLUMN_KEYS)
-        for k in sorted(derived_dict[year].keys(), key = lambda x: -derived_dict[year][x][0]):
-            v1 = derived_dict[year][k][0]
-            v2 = get_max_key(derived_dict[year][k][1]) 
-            print ' ', derived_dict[year][k], v2
-            data_writer.writerow([k, str(v1), str(v2)])
+        for k in sorted(derived_dict[year].keys()):
+            v = derived_dict[year][k]
+            #print ' ', derived_dict[year][k], v2
+            data_writer.writerow([k, str(v[0]), str(v[1])])
 
 if __name__ == '__main__':
     import sys
