@@ -7,8 +7,12 @@ TODO
 * Compare regressing Y1=>Y2 and Y2=>Y3 to (Y1,Y2)=>Y3 to estimate importance of effects from 2 years ago
 * Estimate random noise to see how import effects are
 * Measure pcg diversity within years
-* Repeat PrimaryConditionGroup analysis for ProcedureGroup
+* Repeat PrimaryConditionGroup analysis for ProcedureGroup, PCP, Specialty
 * Find correlation between PrimaryConditionGroup and ProcedureGroup
+* Use log(dih)
+* Look at Specialty in same way as PrimaryConditionGroup and ProcedureGroup
+* Write a generalized "deriver" procedure and produce one cvs file per derived value. Merge derived .csv files later
+* Organize directories 
 
 Techniques
 ==========

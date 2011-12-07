@@ -1,0 +1,68 @@
+from __future__ import division
+"""
+    Explore Heritage .csv files
+    
+    Claims.csv 2,668,990 rows
+"""
+import math
+import os
+import random
+import re
+import csv
+import time
+import pickle
+
+def HEADING():
+    print  '=' * 80
+
+def SUBHEADING():
+    print  '-' * 80
+
+def summarize(title, a_list):
+    """Print some summary statistics about a_list"""
+    x = sorted(a_list)
+    SUBHEADING()
+    print 'Summary "%s":' % title
+    print 'len = %d' % len(x)
+    print 'min = %d' % x[0]
+    print 'max = %d' % x[-1]
+    print 'mean = %f' % (sum(x)/len(x))
+    print 'median = %d' % x[len(x)//2]
+    print 'total = %f' % sum(x)
+
+def get_csv(path):
+    """Read Heritage csv file
+        Returns:
+            column_keys: list of column header keys
+            get_data(): generator to read rows
+    """
+    data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
+    column_keys = data_reader.next()
+    
+    def get_data():
+        for row in data_reader:
+            patient_key = row[0]
+            data = row[1:]
+            yield(patient_key, data)
+
+    return column_keys, get_data
+    
+def get_dict(filename, column_key, xform):
+    """Return column with header <column_key> as a dict with MemberID as keys
+       xform is applied to all values
+    """
+    column_keys, get_data = get_csv(filename)
+    
+    print 'filename=%s, key=%s, column_keys=%s, xform=%s' % (filename, column_key, column_keys, xform)
+    assert(column_key in column_keys[1:])
+    column = column_keys[1:].index(column_key)
+    data_dict = {}
+    for k,v in get_data():
+        try:
+            x = xform(v[column])
+        except:
+            print '+++ "%s" is invalid format in row %d' % (v[column],i)
+            x = None    
+        if x is not None:
+            data_dict[k] = x
+    return data_dict

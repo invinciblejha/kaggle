@@ -31,7 +31,6 @@ def plot_2d_histo_raw(counts, color, label_x, label_y):
                 
     plt.xlabel(label_x)
     plt.ylabel(label_y)
-          
 
 def get_max_count(counts):
     max_count = 0.0

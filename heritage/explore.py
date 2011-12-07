@@ -42,7 +42,10 @@ def get_csv(path):
             
     return column_keys, get_data
     
-def get_dict(filename, key, xform):
+def get_dict(filename, column_key, xform):
+    """Return column with header <column_key> as a dict with MemberID as keys
+       xform is applied to all values
+    """
     column_keys, get_data = get_csv(filename)
     if not key:
         return column_keys
@@ -348,7 +351,6 @@ def get_map_function(table, column):
     if not column in MAP_FUNCTIONS[table].keys():
         return DEFAULT_MAP_FUNCTION
     return MAP_FUNCTIONS[table][column]
-    
 
 def get_main_pcg_dict(filename):
     column_keys, get_data = get_csv(filename)
@@ -445,6 +447,80 @@ def make_group_name(group):
 DERIVED_PREFIX = 'derived_'
 DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims', 'PrimaryConditionGroup'] 
      
+def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_KEYS, NUM_GROUPS = 100):
+    """This has got complicated due to python running slowing with large dicts
+        Passes through input file multiple times and writes partial results to 
+        disk (see group).
+        
+        init_func() returns the initial value of derived_list 
+        update_func(derived_list, input_row) updates derived_list based on input_row
+    """
+    column_keys, get_data = get_csv(filename)
+
+    year_column = column_keys[1:].index('Year')
+    pcg_column = column_keys[1:].index('PrimaryConditionGroup')
+       
+    t0 = time.clock()
+    num_rows = 0
+    
+    for group in range(NUM_GROUPS):
+        derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
+        print 'group=%d' % group
+        _, get_data = get_csv(filename)
+        for k,v in get_data():
+            if (int(k) % NUM_GROUPS) != group:
+                continue
+            year = v[year_column]
+            pcg = get_pcg_index(v[pcg_column])
+                        
+            if num_rows and num_rows % 10000 == 0:
+                t = time.clock() - t0
+                eta  = int(t * (2668990 - num_rows)/num_rows)
+                print ' %8d row (%4.1f%%) %7.1f sec, %4d rows/sec, eta = %6d sec' % (num_rows, 
+                    100.0 * num_rows/2668990, t, int(num_rows/t), eta) 
+
+            for y in (year, 'ALL'):
+                if not k in derived_dict[y].keys():
+                    derived_dict[y][k] = init_func() 
+                update_func(derived_dict[y][k], v)
+            num_rows += 1
+ 
+        print 'Saving'        
+        pickled_path = make_group_name(group)            
+        pkl_file = open(pickled_path , 'wb')
+        pickle.dump(derived_dict, pkl_file, -1)   # Pickle the data using the highest protocol available.
+        pkl_file.close()  
+
+    print 'Writing to file'
+    for year in derived_dict:
+        derived_filename = '%s%s_%s_%s' % (DERIVED_PREFIX, prefix, year, filename)
+        data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
+        data_writer.writerow(['MemberID'] + DERIVED_COLUMN_KEYS)
+        for group in range(NUM_GROUPS):
+            pickled_path = make_group_name(group)            
+            pkl_file = open(pickled_path , 'rb')
+            derived_dict = pickle.load(pkl_file)   
+            pkl_file.close()
+            for k in sorted(derived_dict[year].keys()):
+                row = derived_dict[year][k]
+                data_writer.writerow([k] + [str(v) for v in row])
+
+def make_pcg_counts_table(filename):
+
+    prefix = 'all_counts'
+    derived_column_keys = ['None'] + sorted(PCG_LUT.keys(), key = lambda x: PCG_LUT[x])
+    
+    column_keys, _ = get_csv(filename)
+    pcg_column = column_keys[1:].index('PrimaryConditionGroup')
+
+    def init_func():
+        return [0 for i in range(len(derived_column_keys))]
+
+    def update_func(derived_list, input_row):
+        derived_list[get_pcg_index(input_row[pcg_column])] += 1
+
+    process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys)           
+
 def make_derived_table(filename):
     """This has got complicated due to python running slowing with large dicts
         Passes through input file multiple times and writes partial results to 
@@ -523,8 +599,8 @@ def make_derived_table(filename):
         for k in sorted(derived_dict[year].keys()):
             v = derived_dict[year][k]
             #print ' ', derived_dict[year][k], v2
-            data_writer.writerow([k, str(v[0]), str(v[1])])
-
+            data_writer.writerow([k, str(v[0]), str(v[1])])      
+            
 if __name__ == '__main__':
     import sys
     import optparse
@@ -536,7 +612,8 @@ if __name__ == '__main__':
     parser.add_option('-a', '--all-outputs-for-y', action="store_true", dest='all_outputs', default=False, help='plot all outputs')
     parser.add_option('-d', '--derive-values', dest='derive_values_from', default='', help='derive values from table')
     parser.add_option('-u', '--counts', dest="counts_table_column", default='', help='show counts for table:column')  
-    parser.add_option('-p', '--patient-counts', dest="patient_counts_table_column", default='', help='show patient counts for table:column')  
+    parser.add_option('-p', '--patient-counts', dest="patient_counts_table_column", default='', help='show patient counts for table:column') 
+    parser.add_option('-g', '--pcg-counts', dest="pcg_base_file", default='', help='derive pcg counts')     
     parser.add_option('-t', '--tables', action="store_true", dest='show_tables', default=False, help='show the base tables')
     parser.add_option('-c', '--columns', action="store_true", dest='show_columns', default=False, help='show columns in the base tables')
   
@@ -573,6 +650,11 @@ if __name__ == '__main__':
         table, column = options.patient_counts_table_column.split(':')
         patient_counts_dict = get_counts_by_patient(table, column)   
         show_patient_counts('%s : %s' % (table, column), patient_counts_dict)
+        exit()
+
+    if options.pcg_base_file:
+        make_pcg_counts_table( options.pcg_base_file) 
+        exit()
         
     if options.derive_values_from:
         make_derived_table(options.derive_values_from)
