@@ -3,18 +3,8 @@ from __future__ import division
    Plot some Heritage files
 
 """
-import numpy as np
-import matplotlib.pyplot as plt
 import common
 
-def histo(title, a_list):
-    x = a_list
-    hist,bins = np.histogram(x, bins=50)
-    width=0.7*(bins[1]-bins[0])
-    center=(bins[:-1]+bins[1:])/2
-    plt.bar(center, hist, align='center', width=width)
-    plt.title(title)
-    plt.show()
 
 if __name__ == '__main__':
     import sys
@@ -31,11 +21,11 @@ if __name__ == '__main__':
         vals = common.get_dict(filename, column_key, int).values()
         
         common.summarize(title, vals)
-        histo(title, vals)
+        plotter.plot_histo(title, vals)
         
         vals1 = [i for i in vals if i != 0]
         title1 = title + ' (0 excluded)'
         common.summarize(title1, vals1)
-        histo(title1, vals1)
+        plotter.plot_histo(title1, vals1)
      
     

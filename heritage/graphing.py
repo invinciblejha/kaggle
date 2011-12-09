@@ -5,6 +5,14 @@ from __future__ import division
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+
+def plot_histo(title, a_list):
+    hist,bins = np.histogram(a_list, bins=50)
+    width=0.7*(bins[1]-bins[0])
+    center=(bins[:-1]+bins[1:])/2
+    plt.bar(center, hist, align='center', width=width)
+    plt.title(title)
+    plt.show()
   
 def plot_2d_histo_raw(counts, color, label_x, label_y):
     """Plot a 2D histogram

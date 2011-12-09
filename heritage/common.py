@@ -66,3 +66,25 @@ def get_dict(filename, column_key, xform):
         if x is not None:
             data_dict[k] = x
     return data_dict
+
+def get_dict_all(filename, xform):
+    """Return csv file dict with MemberID as keys
+       xform is applied to all values
+    """
+    column_keys, get_data = get_csv(filename)
+    
+    print 'filename=%s,  column_keys=%s, xform=%s' % (filename, column_keys, xform)
+    data_dict = {}
+    for i, (k,row) in enumerate(get_data()):
+        out_row = []
+        for v in row:
+            try:
+                x = xform(v)
+            except:
+                print '+++ "%s" is invalid format in row %d' % (v,i)
+                x = 0    
+            out_row.append(x)        
+        data_dict[k] = out_row
+    return column_keys, data_dict
+    
+    
