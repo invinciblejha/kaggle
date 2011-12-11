@@ -41,11 +41,26 @@ def get_csv(path):
     
     def get_data():
         for row in data_reader:
-            patient_key = row[0]
+            patient_key = int(row[0])
             data = row[1:]
             yield(patient_key, data)
 
     return column_keys, get_data
+
+def get_member_ids(filename):
+    """Return list of MemberIDs in a Heritage csv file  """
+    column_keys, get_data = get_csv(filename)
+    
+    print 'get_member_ids(filename=%s)' % filename
+    assert(column_keys[0] == 'MemberID')
+
+    #return [k for k,_ in get_data()] 
+    
+    member_ids = []
+    for i, (k,_) in enumerate(get_data()):
+        member_ids.append(k)
+    print '  num rows = %d' % i 
+    return member_ids
     
 def get_dict(filename, column_key, xform):
     """Return column with header <column_key> as a dict with MemberID as keys
@@ -73,7 +88,7 @@ def get_dict_all(filename, xform):
     """
     column_keys, get_data = get_csv(filename)
     
-    print 'filename=%s,  column_keys=%s, xform=%s' % (filename, column_keys, xform)
+    print 'get_dict_all(filename=%s, column_keys=%s, xform=%s)' % (filename, column_keys, xform)
     data_dict = {}
     for i, (k,row) in enumerate(get_data()):
         out_row = []
@@ -85,6 +100,7 @@ def get_dict_all(filename, xform):
                 x = 0    
             out_row.append(x)        
         data_dict[k] = out_row
+    print '  num rows = %d' % i    
     return column_keys, data_dict
     
     
