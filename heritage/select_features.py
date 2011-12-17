@@ -1,0 +1,177 @@
+from __future__ import division
+"""
+    Given X,y find the features in X that best predict y where prediction is measured
+    with k-fold cross-validation
+    
+    Chooose a classifier C e.g. logistic regression
+    
+    Rank individual features by prediction
+    
+    For n = 1 .. num features -1
+        Using best n-tuples of features
+        Create n+1 tuples
+        Find best using GA
+
+"""
+print __doc__
+
+import numpy as np
+import sklearn
+from sklearn import datasets, neighbors, linear_model
+from sklearn.metrics import confusion_matrix
+from sklearn import cross_validation
+
+if False:
+    digits = datasets.load_digits()
+    X_digits = digits.data
+    y_digits = digits.target
+
+    n_samples = len(X_digits)
+
+    X_train = X_digits[:.9*n_samples]
+    y_train = y_digits[:.9*n_samples]
+    X_test = X_digits[.9*n_samples:]
+    y_test = y_digits[.9*n_samples:]
+
+    knn = neighbors.NeighborsClassifier()
+    logistic = linear_model.LogisticRegression()
+
+    fit_knn = knn.fit(X_train, y_train)
+    fit_log = logistic.fit(X_train, y_train)
+
+    y_knn = fit_knn.predict(X_test)
+    cm_knn = confusion_matrix(y_test, y_knn)
+
+    y_log = fit_log.predict(X_test)
+    cm_log = confusion_matrix(y_test, y_log)
+
+    print 'KNN score:', fit_knn.score(X_test, y_test)
+    print cm_knn
+    print 'LogisticRegression score:', fit_log.score(X_test, y_test)
+    print cm_log
+
+    scores_log = cross_validation.cross_val_score(logistic, digits.data, digits.target, cv=5)
+    f_log = cross_validation.cross_val_score(logistic, digits.data, digits.target, cv=5, 
+        score_func=sklearn.metrics.f1_score)
+    print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
+    print 'logistic cv f', f_log, sum(f_log)/len(f_log)
+
+
+_logistic = linear_model.LogisticRegression()
+def get_cv_score(X, y):
+    #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
+    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
+    return sum(f_log)/len(f_log)
+    
+def test_cv():
+    digits = datasets.load_digits()
+    print 'logistic cv = %.2f' % get_cv_score(digits.data, digits.target)
+
+def list_to_str(a_list):
+    #print 'list_to_str(%s)' % a_list
+    return '_'.join('%04d'% f for f in sorted(a_list)) 
+
+def str_to_list(a_str):
+    a_list = [int(f) for f in a_str.split('_')] 
+    #print 'str_to_list(%s) => %s' % (a_str, a_list)
+    return a_list
+    
+def get_most_predictive_features(X, y, feature_sets_list):
+    #print 'get_most_predictive_features: X=%s,y=%s,features=%s' % (X.shape, y.shape, feature_sets_list)  
+    scores = {}
+    print 'score, feature'
+    best_score = 0.0
+    best_indexes = None
+    for f in feature_sets_list:
+        #print '>>%s' % f
+        indexes = str_to_list(f)
+        Xf = X[:,indexes]
+        scores[f] = get_cv_score(Xf, y)
+        print '%7.3f %s %d' % (scores[f], indexes, len(indexes))
+        if scores[f] >= best_score:
+            best_score = scores[f]
+            best_indexes = indexes
+    print '%7.3f %s <= best' % (best_score, best_indexes)        
+    return scores
+
+MAX_FEATURE_SETS = 40  
+    
+def grow(feature_sets_list):
+    #print 'grow(%d) %s' % (len(str_to_list(feature_sets_list[0])), feature_sets_list)
+    feature_sets_list1 = []
+    for i, fi in enumerate(feature_sets_list):
+        for j, fj in enumerate(feature_sets_list[i+1:]):
+            for k in str_to_list(fj):
+                indexes = str_to_list(fi) + [k]
+                if len(set(indexes)) != len(indexes):
+                    continue
+                
+                feature_string = list_to_str(indexes) 
+                if not feature_string in feature_sets_list1:
+                    feature_sets_list1.append(feature_string)
+                if len(feature_sets_list1) >= MAX_FEATURE_SETS:
+                    return feature_sets_list1  
+    return feature_sets_list1  
+    
+def resample_equal_y(X, y):
+    y_vals = np.unique(y)
+    num_y = [sum(y == v) for v in y_vals]
+    min_y = min(num_y)
+    for v in y_vals: 
+        print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
+    
+    X0 = X[y==0,:]
+    X1 = X[y==1,:]
+    y0 = y[y==0]
+    y1 = y[y==1]
+    
+    print 'X0 ', X0.shape
+    print 'y0 ', y0.shape
+    print 'X1 ', X1.shape
+    print 'y1 ', y1.shape
+    
+    X0r, y0r = sklearn.utils.resample(X0, y0, n_samples=X1.shape[0])  
+    
+    print 'X0r', X0r.shape
+    print 'y0r', y0r.shape
+    
+    Xr = np.r_[X0r, X1]
+    yr = np.r_[y0r, y1]
+    
+    print 'Xr ', Xr.shape
+    print 'yr ', yr.shape
+    
+    return Xr, yr
+    
+ 
+def get_most_predictive_feature_set(X, y, feature_indices):  
+    import common 
+    # feature sets are MAX_FEATURE_SETS elements
+    # each element is a set of n ints
+    # n grows in each round
+ 
+    y_vals = np.unique(y)
+    for v in y_vals:
+        print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
+    print 'all: %5d vals = %.3f of population' % (y.shape[0], 1.0)    
+    common.SUBHEADING()
+    X,y = resample_equal_y(X, y)
+    common.SUBHEADING()
+    
+    feature_sets_list = [list_to_str([i]) for i in feature_indices]
+
+    all_scores = {}
+    while True:
+        scores = get_most_predictive_features(X, y, feature_sets_list)
+        #print 'scores=%s' % scores
+        feature_sets_list = sorted(list(scores.keys()), key=lambda k:-scores[k])
+        #print 'feature_sets_list=%s' % feature_sets_list
+        n = len(str_to_list(feature_sets_list[0]))
+        all_scores[n] = scores
+        if n >= len(feature_indices)-2:
+            break
+        feature_sets_list = grow(feature_sets_list)
+
+if __name__ == '__main__':
+    test_cv()
+    

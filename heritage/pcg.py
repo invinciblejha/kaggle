@@ -101,7 +101,7 @@ def classify_nn(X,y,k):
     from sklearn.neighbors import NeighborsClassifier
     knn = NeighborsClassifier()
     knn.fit(X_train, y_train)
-    NeighborsClassifier(n_neighbors=k, leaf_size=20, algorithm='auto')
+    print 'knn=%s' % knn
     y_pred = knn.predict(X_test)
     correct = y_pred == y_test
     print 'k=%2d: Num tests=%6d correct=%6d = %2d%%' % (k, correct.shape[0], correct.sum(),
@@ -227,12 +227,51 @@ def show_dih_counts(year):
             Y = has_dih_keys
             classify(X, Y)
     
-  
+def find_best_features(year):
+    print 'find_best_features(year=%d)' % year
+    
+    pcg_filename = get_pcg_filename(year-1)
+    print 'pcg_filename=%s' % pcg_filename
+    
+    dih_dict = get_dih(year)
+    dih_dict_keys = set(dih_dict.keys())
+    member_ids = common.get_member_ids(pcg_filename)
+    print '%d claims' % len(member_ids)
+    
+    pcg_keys, pcg_counts = get_pcg_counts(year-1)
+    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
+       
+    user_keys = sorted(pcg_counts.keys())
+    has_dih_keys = np.zeros(len(pcg_counts))
+    has_no_dih_keys = np.zeros(len(pcg_counts))
+    for i in range(len(has_dih_keys)):
+        k = user_keys[i]
+        if (k in dih_dict_keys):
+            if dih_dict[k] > 0:
+                has_dih_keys[i] = 1
+            else:
+                has_no_dih_keys[i] = 1 
+    
+    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
+    pcg_counts_a = pcg_counts_a.astype(float)
+    print 'converted to numpy array'
+    print 'pcg_counts_a.shape', pcg_counts_a.shape 
+    
+    import select_features
+    column_keys,_ = common.get_csv(get_pcg_filename(year))
+    feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
+    X = pcg_counts_a
+    y = has_dih_keys
+    select_features.get_most_predictive_feature_set(X, y, feature_indices)  
     
 if False:    
     show_totals_by_dih(2)            
     show_totals_by_dih(3)    
         
-if True:
+if False:
     show_dih_counts(2)
     show_dih_counts(3)
+
+if True:
+    find_best_features(2)
+    find_best_features(3)    
