@@ -21,6 +21,12 @@ import sklearn
 from sklearn import datasets, neighbors, linear_model
 from sklearn.metrics import confusion_matrix
 from sklearn import cross_validation
+from pyevolve import G1DList
+from pyevolve import GSimpleGA
+from pyevolve import G1DList
+from pyevolve import Selectors
+from pyevolve import Consts
+from pyevolve import Crossovers
 import common 
 
 if False:
@@ -58,11 +64,10 @@ if False:
     print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
     print 'logistic cv f', f_log, sum(f_log)/len(f_log)
 
-
 _logistic = linear_model.LogisticRegression()
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
-    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=7) #, score_func=sklearn.metrics.f1_score)
+    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
     return sum(f_log)/len(f_log)
     
 def test_cv():
@@ -115,7 +120,7 @@ def grow(feature_sets_list):
                     return feature_sets_list1  
     return feature_sets_list1  
     
-def resample_equal_y(X, y):
+def resample_equal_y(X, y, fac):
     """Resample X,y to have equal values of y[i]==0 and y[i]==1 over samples X[i],y[i]
         The following code assumes
             y has only 2 values, 0 and 1
@@ -145,27 +150,62 @@ def resample_equal_y(X, y):
     print 'Xr ', Xr.shape
     print 'yr ', yr.shape
     
+    print 'Downsampling by a further factor of %f' % fac
+    Xr, yr = sklearn.utils.resample(Xr, yr, n_samples = int(Xr.shape[0] *fac))  
+    print 'Xr ', Xr.shape
+    print 'yr ', yr.shape
+    
     return Xr, yr
 
 def get_best_features(X, y):
-    from pyevolve import G1DList
-    from pyevolve import GSimpleGA
 
     num_features = X.shape[1]
     
     def eval_func(chromosome):
-        indexes = sorted([i for i in range(num_features) if chromosome[i]])
+        #print '*!', len(chromosome), [chromosome[i] for i in range(len(chromosome))]
+        #indexes = sorted([i for i in range(num_features) if chromosome[i]])
+        indexes = sorted(set([chromosome[i] for i in range(len(chromosome))]))
+        #non_indexes = sorted([i for i in range(num_features) if not chromosome[i]])
         Xf = X[:,indexes]
         score = get_cv_score(Xf, y)
-        print '  eval %.4f %3d %s' % (score, len(indexes), indexes[:5])
+        #print '  eval %.4f %3d %s' % (score, len(indexes), indexes)
         return score
 
-    genome = G1DList.G1DList(num_features)
-    genome.evaluator.set(eval_func)
-    ga = GSimpleGA.GSimpleGA(genome)
-    ga.evolve(freq_stats=10)
-    print ga.bestIndividual()
+    results = {}    
+    for n in range(2, num_features):
+        common.SUBHEADING()
+        print 'n=%d' % n
+        
+        genome = G1DList.G1DList(n)
+        genome.setParams(rangemin=0, rangemax=num_features-1)
+        genome.evaluator.set(eval_func)
+        genome.crossover.set(Crossovers.G1DListCrossoverUniform)
+
+        ga = GSimpleGA.GSimpleGA(genome)
+        ga.selector.set(Selectors.GRouletteWheel)
+        ga.setGenerations(500)
+        ga.terminationCriteria.set(GSimpleGA.ConvergenceCriteria)
+        ga.setMinimax(Consts.minimaxType["maximize"])
+ 
+        #ga.setPopulationSize(100)
+        ga.setMutationRate(0.02)
+        ga.setCrossoverRate(1.0)
+
+        ga.evolve(freq_stats=10)
+
+        best = ga.bestIndividual()
+        #print best
+        print "Best individual score: %.3f" % best.getRawScore()
+        print "Best list: %s" % sorted(best.genomeList)
+        results[n] = {'score': best.getRawScore(), 'list': sorted(best.genomeList)}
+        for j in sorted(results.keys()):
+            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])
     
+    common.SUBHEADING()    
+    for j in sorted(results.keys()):
+        print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])
+    return results
+
 def get_most_predictive_feature_set(X, y, feature_indices):  
     
     # feature sets are MAX_FEATURE_SETS elements
@@ -177,30 +217,29 @@ def get_most_predictive_feature_set(X, y, feature_indices):
         print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
     print 'all: %5d vals = %.3f of population' % (y.shape[0], 1.0)    
     common.SUBHEADING()
-    X,y = resample_equal_y(X, y)
-    common.SUBHEADING()
+    X,y = resample_equal_y(X, y, 0.1)
     
-    get_best_features(X, y)
-    exit()
-    
-    feature_sets_list = [list_to_str([i]) for i in feature_indices]
+    return get_best_features(X, y)
+  
+    if False:
+        feature_sets_list = [list_to_str([i]) for i in feature_indices]
 
-    all_scores = {}
-    while True:
-        common.SUBHEADING()
-        scores = get_most_predictive_features(X, y, feature_sets_list)
-        feature_sets_list = sorted(list(scores.keys()), key=lambda k:-scores[k])
-        n = len(str_to_list(feature_sets_list[0]))
-        all_scores[n] = scores
+        all_scores = {}
+        while True:
+            common.SUBHEADING()
+            scores = get_most_predictive_features(X, y, feature_sets_list)
+            feature_sets_list = sorted(list(scores.keys()), key=lambda k:-scores[k])
+            n = len(str_to_list(feature_sets_list[0]))
+            all_scores[n] = scores
+                    
+            print 'num, score'
+            for k in sorted(all_scores.keys()):
+                print '%5d: %7.3f' % (k, max(all_scores[k].values()))
                 
-        print 'num, score'
-        for k in sorted(all_scores.keys()):
-            print '%5d: %7.3f' % (k, max(all_scores[k].values()))
+            if n >= len(feature_indices)-2:
+                break
+            feature_sets_list = grow(feature_sets_list)
             
-        if n >= len(feature_indices)-2:
-            break
-        feature_sets_list = grow(feature_sets_list)
-        
 
 
 if __name__ == '__main__':

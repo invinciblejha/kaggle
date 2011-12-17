@@ -262,7 +262,8 @@ def find_best_features(year):
     feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
     X = pcg_counts_a
     y = has_dih_keys
-    select_features.get_most_predictive_feature_set(X, y, feature_indices)  
+    
+    return select_features.get_most_predictive_feature_set(X, y, feature_indices)  
     
 if False:    
     show_totals_by_dih(2)            
@@ -273,5 +274,15 @@ if False:
     show_dih_counts(3)
 
 if True:
-    find_best_features(2)
-    find_best_features(3)    
+    all_results = {}
+    for i in (2,3):
+        all_results[i] = find_best_features(i)
+        results = all_results[i]
+        for j in sorted(results.keys()):
+            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list']) 
+    common.HEADING()    
+    for i in sorted(all_results.keys()):
+        print 'year = %d' % i
+        results = all_results[i]
+        for j in sorted(results.keys()):
+            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])        
