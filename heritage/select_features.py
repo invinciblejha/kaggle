@@ -12,6 +12,7 @@ from __future__ import division
         Create n+1 tuples
         Find best using GA
 
+    !@#$ Try using http://pyevolve.sourceforge.net/getstarted.html#first-example instead of grow()    
 """
 print __doc__
 
@@ -20,6 +21,7 @@ import sklearn
 from sklearn import datasets, neighbors, linear_model
 from sklearn.metrics import confusion_matrix
 from sklearn import cross_validation
+import common 
 
 if False:
     digits = datasets.load_digits()
@@ -60,7 +62,7 @@ if False:
 _logistic = linear_model.LogisticRegression()
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
-    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
+    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=7) #, score_func=sklearn.metrics.f1_score)
     return sum(f_log)/len(f_log)
     
 def test_cv():
@@ -94,7 +96,7 @@ def get_most_predictive_features(X, y, feature_sets_list):
     print '%7.3f %s <= best' % (best_score, best_indexes)        
     return scores
 
-MAX_FEATURE_SETS = 40  
+MAX_FEATURE_SETS = 240  
     
 def grow(feature_sets_list):
     #print 'grow(%d) %s' % (len(str_to_list(feature_sets_list[0])), feature_sets_list)
@@ -114,12 +116,13 @@ def grow(feature_sets_list):
     return feature_sets_list1  
     
 def resample_equal_y(X, y):
-    y_vals = np.unique(y)
-    num_y = [sum(y == v) for v in y_vals]
-    min_y = min(num_y)
-    for v in y_vals: 
-        print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
-    
+    """Resample X,y to have equal values of y[i]==0 and y[i]==1 over samples X[i],y[i]
+        The following code assumes
+            y has only 2 values, 0 and 1
+            y[i]==1 is less common than y[i]==0
+            there are many y[i]==1 samples (=> downsampling is ok)
+    """
+       
     X0 = X[y==0,:]
     X1 = X[y==1,:]
     y0 = y[y==0]
@@ -130,6 +133,7 @@ def resample_equal_y(X, y):
     print 'X1 ', X1.shape
     print 'y1 ', y1.shape
     
+    # Downsample y[i]==0 on rows
     X0r, y0r = sklearn.utils.resample(X0, y0, n_samples=X1.shape[0])  
     
     print 'X0r', X0r.shape
@@ -142,13 +146,13 @@ def resample_equal_y(X, y):
     print 'yr ', yr.shape
     
     return Xr, yr
-    
  
 def get_most_predictive_feature_set(X, y, feature_indices):  
-    import common 
+    
     # feature sets are MAX_FEATURE_SETS elements
     # each element is a set of n ints
     # n grows in each round
+    
  
     y_vals = np.unique(y)
     for v in y_vals:
@@ -171,6 +175,11 @@ def get_most_predictive_feature_set(X, y, feature_indices):
         if n >= len(feature_indices)-2:
             break
         feature_sets_list = grow(feature_sets_list)
+        
+        common.SUBHEADING()
+        print 'num, score'
+        for k in sorted(all_scores.keys()):
+            print '%5d: %7.3f' % (k, max(all_scores[k].values()))
 
 if __name__ == '__main__':
     test_cv()
