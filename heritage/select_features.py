@@ -166,20 +166,21 @@ def get_most_predictive_feature_set(X, y, feature_indices):
 
     all_scores = {}
     while True:
+        common.SUBHEADING()
         scores = get_most_predictive_features(X, y, feature_sets_list)
-        #print 'scores=%s' % scores
         feature_sets_list = sorted(list(scores.keys()), key=lambda k:-scores[k])
-        #print 'feature_sets_list=%s' % feature_sets_list
         n = len(str_to_list(feature_sets_list[0]))
         all_scores[n] = scores
+                
+        print 'num, score'
+        for k in sorted(all_scores.keys()):
+            print '%5d: %7.3f' % (k, max(all_scores[k].values()))
+            
         if n >= len(feature_indices)-2:
             break
         feature_sets_list = grow(feature_sets_list)
         
-        common.SUBHEADING()
-        print 'num, score'
-        for k in sorted(all_scores.keys()):
-            print '%5d: %7.3f' % (k, max(all_scores[k].values()))
+
 
 if __name__ == '__main__':
     test_cv()
