@@ -146,14 +146,32 @@ def resample_equal_y(X, y):
     print 'yr ', yr.shape
     
     return Xr, yr
- 
+
+def get_best_features(X, y):
+    from pyevolve import G1DList
+    from pyevolve import GSimpleGA
+
+    num_features = X.shape[1]
+    
+    def eval_func(chromosome):
+        indexes = sorted([i for i in range(num_features) if chromosome[i]])
+        Xf = X[:,indexes]
+        score = get_cv_score(Xf, y)
+        print '  eval %.4f %3d %s' % (score, len(indexes), indexes[:5])
+        return score
+
+    genome = G1DList.G1DList(num_features)
+    genome.evaluator.set(eval_func)
+    ga = GSimpleGA.GSimpleGA(genome)
+    ga.evolve(freq_stats=10)
+    print ga.bestIndividual()
+    
 def get_most_predictive_feature_set(X, y, feature_indices):  
     
     # feature sets are MAX_FEATURE_SETS elements
     # each element is a set of n ints
     # n grows in each round
-    
- 
+
     y_vals = np.unique(y)
     for v in y_vals:
         print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
@@ -161,6 +179,9 @@ def get_most_predictive_feature_set(X, y, feature_indices):
     common.SUBHEADING()
     X,y = resample_equal_y(X, y)
     common.SUBHEADING()
+    
+    get_best_features(X, y)
+    exit()
     
     feature_sets_list = [list_to_str([i]) for i in feature_indices]
 
