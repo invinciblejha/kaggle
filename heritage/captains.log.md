@@ -25,12 +25,12 @@ Looking for predictive features
     20: 0.612 [1, 3, 5, 12, 14, 15, 16, 23, 26, 27, 28, 29, 31, 34, 36, 37, 39, 40, 42, 43]
 
 [1, 3, 12] =  AMI ARTHSPIN GIBLEED
-* 1 = Myocardial infarction.
-* 3 = Arthropathies and spine disorders
-* 12 = Gastrointestinal hemorrhage; miscellaneous disorders of stomach and duodenum; 
+** 1 = Myocardial infarction.
+** 3 = Arthropathies and spine disorders
+** 12 = Gastrointestinal hemorrhage; miscellaneous disorders of stomach and duodenum; 
      diverticulitis; abdominal symptoms, nausea with vomiting; blood in stool
-* 34 = Pregnancy     
-* 28 = All other neurologic problems and mental disorders (other than
+** 34 = Pregnancy     
+** 28 = All other neurologic problems and mental disorders (other than
      drug overdoses); senility. 
-* 27 = External causes of injury; remaining supplemental classification of factors influencing 
+** 27 = External causes of injury; remaining supplemental classification of factors influencing 
      health status and contact with health services.     
