@@ -35,3 +35,6 @@ diverticulitis; abdominal symptoms, nausea with vomiting; blood in stool
 * 27 = External causes of injury; remaining supplemental classification of factors 
 influencing  health status and contact with health services.     
 *  5 = chemotherapy encounters where cancer not specified
+* 23 = All other endocrine, metabolic and miscellaneous immune
+disorders (but not including systemic lupus erythematosus or
+rheumatoid arthritis). 
