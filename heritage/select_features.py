@@ -58,8 +58,8 @@ if False:
     print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
     print 'logistic cv f', f_log, sum(f_log)/len(f_log)
 
-#_classifier = linear_model.LogisticRegression()
-_classifier = neighbors.NeighborsClassifier(n_neighbors=5)
+_classifier = linear_model.LogisticRegression()
+#_classifier = neighbors.NeighborsClassifier(n_neighbors=5)
 
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 

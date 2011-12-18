@@ -206,9 +206,10 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             if len(existing_genomes) >= POPULATION_SIZE:
                 break
             if base_genomes:
-                for g in base_genomes:
+                for j,g in enumerate(base_genomes[:POPULATION_SIZE//5]):
                     add_genome(make_random_genome(genome_len, allowed_values, g))
-                    add_genome(make_random_genome(genome_len, allowed_values))
+                    if j % 2:
+                        add_genome(make_random_genome(genome_len, allowed_values))
                     if len(existing_genomes) >= POPULATION_SIZE:
                         break
             else:
