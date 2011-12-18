@@ -28,11 +28,14 @@ from math import *
 
 # The tunable parameters in the code
 #
-# Prob of selection = WEIGHT_RATIO^rank. Thus loweer WEIGHT_RATIO select more genomes with higher
-# ranking scores 
+# Probability  of selection = WEIGHT_RATIO^rank. Thus lower WEIGHT_RATIO selects more genomes with 
+#  higher anking scores 
 WEIGHT_RATIO = 0.95 # 0.90
+# Number of rounds to wait for convergence
 NUM_ROUNDS = 1000
-NUM_INITIAL_GENOMES = 100
+# Number of genomes
+POPULATION_SIZE = 200
+# Number of times to spin roulette wheel to get unique new genomes
 NUM_ROULETTE_TRYS = 2000
 # Test for convergence. Top CONVERGENCE_NUMBER scores are the same
 CONVERGENCE_NUMBER = 30
@@ -116,19 +119,18 @@ def make_shuffle_list(size, max_val):
             shuffle_list.append(i)
     return shuffle_list
 
-def cross_over(c1, c2):
-    """ Swap half the elements in lists <c1> and <c2> """
-    if len(c1) != len(c2):
-        print 'c1', c1
-        print 'c2', c2
-    assert(len(c1) == len(c2))
-    assert(len(c1) > 0)
-    assert(len(c2) > 0)
-    n = len(c1)
+def cross_over(g1, g2):
+    """ Swap half the elements that differ in lists <g1> and <g2> 
+        g1 and g2 are genomes
+    """
+    assert(len(g1) == len(g2))
+    assert(len(g1) > 0)
+    assert(len(g2) > 0)
+    n = len(g1)
 
     # Find elements that are not in both lists
-    d1 = sorted(c1, key = lambda x: x in c2)
-    d2 = sorted(c2, key = lambda x: x in c1)
+    d1 = sorted(g1, key = lambda x: x in g2)
+    d2 = sorted(g2, key = lambda x: x in g1)
     for i1,x in enumerate(d1):
         if x in d2:
             break
@@ -140,16 +142,15 @@ def cross_over(c1, c2):
     shuffle_list = make_shuffle_list(2*(m//2), 2*(m//2))
     swaps = [(shuffle_list[i*2],shuffle_list[i*2+1]) for i in range(len(shuffle_list)//2)]
 
-    for i,s in enumerate(swaps):
-        assert(s[0] < 2* len(swaps))
-        assert(s[1] < 2* len(swaps))
+    for s in swaps:
         d1[s[0]], d2[s[1]] = d2[s[1]], d1[s[0]] 
 
     return (sorted(d1), sorted(d2))
 
 def get_eval_result(eval_func, genome):
     """ Returns a dict that shows results of running <eval_func> classfier on
-        <genome> """
+        <genome> 
+    """
     score = eval_func(genome)
     r = make_result(genome, score)
     #LOG('get_eval_result => %s' % result_to_str(r))
@@ -165,6 +166,7 @@ def make_random_genome(genome_len, allowed_values, base_genome = None):
     return sorted(genome)
     
 def mutate(genome, allowed_values):
+    """Mutate a single element in <genome> to some other value from <allowed_values>"""
     missing = random.randint(0, len(genome)-1)
     genome1 = [genome[i] for i in range(len(genome)) if i != missing]
     return make_random_genome(len(genome), allowed_values, genome1)
@@ -174,7 +176,6 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
         A genome is a list of unique integers (could be a set).
         New genomes are created by cross-over of the starting genomes
     """
-    # Set random seed so that each run gives same results
     
     results = []
     existing_genomes = []
@@ -200,13 +201,13 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             add_genome(genome)
             
         for i in range(1000):
-            if len(existing_genomes) >= NUM_INITIAL_GENOMES:
+            if len(existing_genomes) >= POPULATION_SIZE:
                 break
             if base_genomes:
                 for g in base_genomes:
                     add_genome(make_random_genome(genome_len, allowed_values, g))
                     add_genome(make_random_genome(genome_len, allowed_values))
-                    if len(existing_genomes) >= NUM_INITIAL_GENOMES:
+                    if len(existing_genomes) >= POPULATION_SIZE:
                         break
             else:
                 add_genome(make_random_genome(genome_len, allowed_values))
@@ -262,7 +263,7 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
     for r in results[:5]:
         print '   ', result_to_str(r)
         
-    return results[:NUM_INITIAL_GENOMES]
+    return results[:POPULATION_SIZE]
 
 def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = None):
     for i in range(num_passes):

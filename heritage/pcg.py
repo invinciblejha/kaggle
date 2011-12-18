@@ -264,6 +264,53 @@ def find_best_features(year):
     y = has_dih_keys
     
     return select_features.get_most_predictive_feature_set(X, y, feature_indices)  
+
+def getXy(year):
+    print 'make_predictions(year=%d)' % year
+    
+    pcg_filename = get_pcg_filename(year-1)
+    print 'pcg_filename=%s' % pcg_filename
+    
+    dih_dict = get_dih(year)
+    dih_dict_keys = set(dih_dict.keys())
+    member_ids = common.get_member_ids(pcg_filename)
+    print '%d claims' % len(member_ids)
+    
+    pcg_keys, pcg_counts = get_pcg_counts(year-1)
+    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
+       
+    user_keys = sorted(pcg_counts.keys())
+    has_dih_keys = np.zeros(len(pcg_counts))
+    has_no_dih_keys = np.zeros(len(pcg_counts))
+    for i in range(len(has_dih_keys)):
+        k = user_keys[i]
+        if (k in dih_dict_keys):
+            if dih_dict[k] > 0:
+                has_dih_keys[i] = 1
+            else:
+                has_no_dih_keys[i] = 1 
+    
+    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
+    pcg_counts_a = pcg_counts_a.astype(float)
+    print 'converted to numpy array'
+    print 'pcg_counts_a.shape', pcg_counts_a.shape 
+    
+  
+    column_keys,_ = common.get_csv(get_pcg_filename(year))
+    feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
+    X = pcg_counts_a
+    y = has_dih_keys
+    
+    return X,y 
+
+def make_predictions(year):
+    import predict
+    PREDICTIVE_INDICES = [1, 3, 12, 23, 26, 27, 28, 34, 37, 40]
+    print 'make_predictions(year=%d)' % year
+    X,y = getXy(year)
+    X = X[:,PREDICTIVE_INDICES]
+    predict.predict(X,y)
+    
     
 if False:    
     show_totals_by_dih(2)            
@@ -273,10 +320,11 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if True:
+if False:
     import random
      # Set random seed so that each run gives same results
     random.seed(333)
+    np.random.seed(333)
 
     all_results = {}
     for i in (3,2):
@@ -290,3 +338,7 @@ if True:
         results = all_results[i]
         for j in sorted(results.keys()):
             print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome'])        
+            
+if True:
+    for year in (3,2):
+        make_predictions(year)            
