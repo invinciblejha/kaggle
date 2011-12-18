@@ -58,10 +58,12 @@ if False:
     print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
     print 'logistic cv f', f_log, sum(f_log)/len(f_log)
 
-_logistic = linear_model.LogisticRegression()
+#_classifier = linear_model.LogisticRegression()
+_classifier = neighbors.NeighborsClassifier(n_neighbors=5)
+
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
-    f_log = cross_validation.cross_val_score(_logistic, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
+    f_log = cross_validation.cross_val_score(_classifier, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
     return sum(f_log)/len(f_log)
 
 def test_cv():
@@ -136,7 +138,7 @@ def get_best_features(X, y):
         best_genomes = [r['genome'] for r in results]    
     return all_results    
  
-def get_most_predictive_feature_set(X, y, feature_indices):  
+def get_most_predictive_feature_set(X, y):  
     common.SUBHEADING()
     X,y = resample_equal_y(X, y, 1.0)
     return get_best_features(X, y)

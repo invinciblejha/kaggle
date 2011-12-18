@@ -34,7 +34,7 @@ WEIGHT_RATIO = 0.95 # 0.90
 # Number of rounds to wait for convergence
 NUM_ROUNDS = 1000
 # Number of genomes
-POPULATION_SIZE = 200
+POPULATION_SIZE = 100
 # Number of times to spin roulette wheel to get unique new genomes
 NUM_ROULETTE_TRYS = 2000
 # Test for convergence. Top CONVERGENCE_NUMBER scores are the same
@@ -193,6 +193,7 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
 
     def make_initial_genomes(genome_len, allowed_values, base_genomes):
         for i in range(len(allowed_values)):
+            print '%d,' % len(existing_genomes),
             if i+genome_len <= len(allowed_values):
                 genome = allowed_values[i:i+genome_len]
             else:
@@ -200,7 +201,8 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             assert(len(genome) == genome_len)    
             add_genome(genome)
             
-        for i in range(1000):
+        for i in range(POPULATION_SIZE * 2):
+            print '%d,' % len(existing_genomes),
             if len(existing_genomes) >= POPULATION_SIZE:
                 break
             if base_genomes:

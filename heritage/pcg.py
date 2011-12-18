@@ -83,7 +83,7 @@ TOP_PCG_KEYS = ['RENAL2', 'HIPFX', 'CHF', 'AMI', 'RENAL1', 'FLaELEC', 'PRGNCY', 
     'SEPSIS', 'PNCRDZ', 'STROKE', 'HEART2', 'CANCRA']
   
   
-def classify_nn(X,y,k):
+def classify_nn(X, y, k):
     m = X.shape[0]
     m_test = int(m*0.25)
     m_train = m - m_test
@@ -114,7 +114,7 @@ def classify_nn(X,y,k):
 def classify(X, y):   
     print 'classify(X=%s,Y=%s)' % (X.shape, y.shape)
    
-   # Normalize
+    # Normalize
     means = X.mean(axis=0)
     stds = X.std(axis=0)
     if False:
@@ -226,45 +226,6 @@ def show_dih_counts(year):
             X = pcg_counts_a[:,idxs]
             Y = has_dih_keys
             classify(X, Y)
-    
-def find_best_features(year):
-    print 'find_best_features(year=%d)' % year
-    
-    pcg_filename = get_pcg_filename(year-1)
-    print 'pcg_filename=%s' % pcg_filename
-    
-    dih_dict = get_dih(year)
-    dih_dict_keys = set(dih_dict.keys())
-    member_ids = common.get_member_ids(pcg_filename)
-    print '%d claims' % len(member_ids)
-    
-    pcg_keys, pcg_counts = get_pcg_counts(year-1)
-    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
-       
-    user_keys = sorted(pcg_counts.keys())
-    has_dih_keys = np.zeros(len(pcg_counts))
-    has_no_dih_keys = np.zeros(len(pcg_counts))
-    for i in range(len(has_dih_keys)):
-        k = user_keys[i]
-        if (k in dih_dict_keys):
-            if dih_dict[k] > 0:
-                has_dih_keys[i] = 1
-            else:
-                has_no_dih_keys[i] = 1 
-    
-    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
-    pcg_counts_a = pcg_counts_a.astype(float)
-    print 'converted to numpy array'
-    print 'pcg_counts_a.shape', pcg_counts_a.shape 
-    
-    import select_features
-    column_keys,_ = common.get_csv(get_pcg_filename(year))
-    feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
-    X = pcg_counts_a
-    y = has_dih_keys
-    
-    return select_features.get_most_predictive_feature_set(X, y, feature_indices)  
-
 def getXy(year):
     print 'make_predictions(year=%d)' % year
     
@@ -294,14 +255,28 @@ def getXy(year):
     pcg_counts_a = pcg_counts_a.astype(float)
     print 'converted to numpy array'
     print 'pcg_counts_a.shape', pcg_counts_a.shape 
-    
   
     column_keys,_ = common.get_csv(get_pcg_filename(year))
     feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
     X = pcg_counts_a
     y = has_dih_keys
     
+    # Normalize
+    means = X.mean(axis=0)
+    stds = X.std(axis=0)
+
+    for i in range(X.shape[1]):
+        X[:,i] = X[:,i] - means[i]
+        if abs(stds[i]) > 1e-4:
+            X[:,i] = X[:,i]/stds[i]
+    
     return X,y 
+    
+def find_best_features(year):
+    import select_features
+    print 'find_best_features(year=%d)' % year
+    X,y = getXy(year)
+    return select_features.get_most_predictive_feature_set(X, y)  
 
 def make_predictions(year):
     import predict
@@ -320,7 +295,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if False:
+if True:
     import random
      # Set random seed so that each run gives same results
     random.seed(333)
@@ -339,6 +314,6 @@ if False:
         for j in sorted(results.keys()):
             print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome'])        
             
-if True:
+if False:
     for year in (3,2):
         make_predictions(year)            
