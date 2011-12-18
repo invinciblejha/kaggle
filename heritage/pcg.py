@@ -27,7 +27,7 @@ def get_pcg_counts(year):
     return common.get_dict_all(get_pcg_filename(year), int) 
 
 def get_total_pcg_filename(year):
-    return r'data\pcg_totals_Y%d_Claims.csv' % year    
+    return r'data\pcg_totals_Y%d_Claims_20.csv' % year    
 
 def show_totals_by_dih(year):
     print 'show_totals_by_dih(year=%d)' % year

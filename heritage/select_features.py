@@ -21,6 +21,7 @@ import sklearn
 from sklearn import datasets, neighbors, linear_model
 from sklearn.metrics import confusion_matrix
 from sklearn import cross_validation
+from pyevolve import G1DBinaryString
 from pyevolve import G1DList
 from pyevolve import GSimpleGA
 from pyevolve import G1DList
@@ -28,6 +29,7 @@ from pyevolve import Selectors
 from pyevolve import Consts
 from pyevolve import Crossovers
 import common 
+import ga
 
 if False:
     digits = datasets.load_digits()
@@ -157,54 +159,82 @@ def resample_equal_y(X, y, fac):
     
     return Xr, yr
 
+_BINARY_GENOME = True    
 def get_best_features(X, y):
 
     num_features = X.shape[1]
     
     def eval_func(chromosome):
-        #print '*!', len(chromosome), [chromosome[i] for i in range(len(chromosome))]
-        #indexes = sorted([i for i in range(num_features) if chromosome[i]])
-        indexes = sorted(set([chromosome[i] for i in range(len(chromosome))]))
-        #non_indexes = sorted([i for i in range(num_features) if not chromosome[i]])
+        indexes = [chromosome[i] for i in range(len(chromosome))]
         Xf = X[:,indexes]
         score = get_cv_score(Xf, y)
         #print '  eval %.4f %3d %s' % (score, len(indexes), indexes)
         return score
-
-    results = {}    
+    
+    allowed_values = range(num_features)
+    all_results = {}
     for n in range(2, num_features):
-        common.SUBHEADING()
-        print 'n=%d' % n
+        genome_len = n
+        results = ga.run_ga(eval_func, genome_len, allowed_values)
+        # results are sorted best to worst so this gets best results
+        # !@#$ Keep all results and use these to seed n+1 round
+        all_results[n] = results[0] 
+    
+    if False:
+        def eval_func_binary(chromosome):
+            indexes = sorted([i for i in range(num_features) if chromosome[i]])
+            Xf = X[:,indexes]
+            score = get_cv_score(Xf, y)
+            #print '  eval %.4f %3d %s' % (score, len(indexes), indexes)
+            return score
+            
+        def eval_func_list(chromosome):
+            indexes = [chromosome[i] for i in range(len(chromosome))]
+            Xf = X[:,indexes]
+            score = get_cv_score(Xf, y)
+            #print '  eval %.4f %3d %s' % (score, len(indexes), indexes)
+            return score
+
+        results = {}    
+        for n in range(2, 3):
+        #for n in range(2, num_features):
+            common.SUBHEADING()
+            print 'n=%d' % n
+            
+            if _BINARY_GENOME:
+                genome = G1DBinaryString.G1DBinaryString(num_features)
+                genome.evaluator.set(eval_func_binary)
+                genome.crossover.set(Crossovers.G1DBinaryStringXUniform)
+            else:
+                genome = G1DList.G1DList(n)
+                genome.setParams(rangemin=0, rangemax=num_features-1)
+                genome.evaluator.set(eval_func_list)
+                genome.crossover.set(Crossovers.G1DListCrossoverUniform)
+
+            ga = GSimpleGA.GSimpleGA(genome)
+            ga.selector.set(Selectors.GRouletteWheel)
+            ga.setGenerations(500)
+            #ga.terminationCriteria.set(GSimpleGA.ConvergenceCriteria)
+            ga.setMinimax(Consts.minimaxType["maximize"])
+     
+            #ga.setPopulationSize(100)
+            ga.setMutationRate(0.02)
+            ga.setCrossoverRate(1.0)
+
+            ga.evolve(freq_stats=10)
+
+            best = ga.bestIndividual()
+            #print best
+            print "Best individual score: %.3f" % best.getRawScore()
+            print "Best list: %s" % sorted(best.genomeList)
+            results[n] = {'score': best.getRawScore(), 'list': sorted(best.genomeList)}
+            for j in sorted(results.keys()):
+                print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])
         
-        genome = G1DList.G1DList(n)
-        genome.setParams(rangemin=0, rangemax=num_features-1)
-        genome.evaluator.set(eval_func)
-        genome.crossover.set(Crossovers.G1DListCrossoverUniform)
-
-        ga = GSimpleGA.GSimpleGA(genome)
-        ga.selector.set(Selectors.GRouletteWheel)
-        ga.setGenerations(500)
-        ga.terminationCriteria.set(GSimpleGA.ConvergenceCriteria)
-        ga.setMinimax(Consts.minimaxType["maximize"])
- 
-        #ga.setPopulationSize(100)
-        ga.setMutationRate(0.02)
-        ga.setCrossoverRate(1.0)
-
-        ga.evolve(freq_stats=10)
-
-        best = ga.bestIndividual()
-        #print best
-        print "Best individual score: %.3f" % best.getRawScore()
-        print "Best list: %s" % sorted(best.genomeList)
-        results[n] = {'score': best.getRawScore(), 'list': sorted(best.genomeList)}
+        common.SUBHEADING()    
         for j in sorted(results.keys()):
             print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])
-    
-    common.SUBHEADING()    
-    for j in sorted(results.keys()):
-        print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])
-    return results
+        return results
 
 def get_most_predictive_feature_set(X, y, feature_indices):  
     
