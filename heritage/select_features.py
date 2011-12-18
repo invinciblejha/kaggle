@@ -63,38 +63,11 @@ def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
     f_log = cross_validation.cross_val_score(_logistic, X, y, cv=3) #, score_func=sklearn.metrics.f1_score)
     return sum(f_log)/len(f_log)
-    
+
 def test_cv():
     digits = datasets.load_digits()
     print 'logistic cv = %.2f' % get_cv_score(digits.data, digits.target)
 
-def list_to_str(a_list):
-    return '_'.join('%04d'% f for f in sorted(a_list)) 
-
-def str_to_list(a_str):
-    a_list = [int(f) for f in a_str.split('_')] 
-    #print 'str_to_list(%s) => %s' % (a_str, a_list)
-    return a_list
-    
-def get_most_predictive_features(X, y, feature_sets_list):
-    #print 'get_most_predictive_features: X=%s,y=%s,features=%s' % (X.shape, y.shape, feature_sets_list)  
-    scores = {}
-    print 'score, feature'
-    best_score = 0.0
-    best_indexes = None
-    for f in feature_sets_list:
-        indexes = str_to_list(f)
-        Xf = X[:,indexes]
-        scores[f] = get_cv_score(Xf, y)
-        print '%7.3f %s %d' % (scores[f], indexes, len(indexes))
-        if scores[f] >= best_score:
-            best_score = scores[f]
-            best_indexes = indexes
-    print '%7.3f %s <= best' % (best_score, best_indexes)        
-    return scores
-
-
-    
 def resample_equal_y(X, y, fac):
     """Resample X,y to have equal values of y[i]==0 and y[i]==1 over samples X[i],y[i]
         The following code assumes
@@ -129,9 +102,8 @@ def resample_equal_y(X, y, fac):
     Xr, yr = sklearn.utils.resample(Xr, yr, n_samples = int(Xr.shape[0] *fac))  
     print 'Xr ', Xr.shape
     print 'yr ', yr.shape
-    
-    return Xr, yr
 
+    return Xr, yr
  
 def get_best_features(X, y):
 
@@ -150,8 +122,8 @@ def get_best_features(X, y):
     for n in range(2, num_features):
     #for n in range(2, 5):
         genome_len = n
-        #results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
-        results = GAX.run_ga2(eval_func, genome_len, allowed_values, 3, best_genomes)
+        results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
+        #results = GAX.run_ga2(eval_func, genome_len, allowed_values, 3, best_genomes)
         # results are sorted best to worst so this gets best results
         all_results[n] = results[0] 
         for j in sorted(all_results.keys()):
@@ -160,14 +132,8 @@ def get_best_features(X, y):
     return all_results    
  
 def get_most_predictive_feature_set(X, y, feature_indices):  
-    
-    y_vals = np.unique(y)
-    for v in y_vals:
-        print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
-    print 'all: %5d vals = %.3f of population' % (y.shape[0], 1.0)    
     common.SUBHEADING()
     X,y = resample_equal_y(X, y, 1.0)
-    
     return get_best_features(X, y)
 
 if __name__ == '__main__':

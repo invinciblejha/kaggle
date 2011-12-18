@@ -29,7 +29,7 @@ from math import *
 # Prob of selection = WEIGHT_RATIO^rank. Thus loweer WEIGHT_RATIO select more genomes with higher
 # ranking scores 
 WEIGHT_RATIO = 0.95 # 0.90
-NUM_ROUNDS = 2000
+NUM_ROUNDS = 1000
 NUM_INITIAL_GENOMES = 100
 NUM_ROULETTE_TRYS = 2000
 # Test for convergence. Top CONVERGENCE_NUMBER scores are the same
@@ -234,7 +234,8 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             break
         add_genome(g1)
         add_genome(g2)
-        #print 'history_of_best', history_of_best, cnt 
+        if cnt > 0 and cnt % 100 == 0:
+            print '  Round %4d. Best = %s' % (cnt, result_to_str(results[0]))
         if has_converged(history_of_best):
             print '2. Converged after %d GA rounds. Top %d genomes have same score' % (cnt, CONVERGENCE_NUMBER)
             break
