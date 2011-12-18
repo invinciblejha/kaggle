@@ -213,6 +213,8 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
                         break
             else:
                 add_genome(make_random_genome(genome_len, allowed_values))
+        
+        print
                 
     def get_new_genomes(): 
         """Spin roulette wheel repeatedly in search of a new binary vector"""
