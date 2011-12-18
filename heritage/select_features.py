@@ -126,8 +126,12 @@ def get_best_features(X, y):
         #results = GAX.run_ga2(eval_func, genome_len, allowed_values, 3, best_genomes)
         # results are sorted best to worst so this gets best results
         all_results[n] = results[0] 
-        for j in sorted(all_results.keys()):
-            print '%6d: %.3f %s' % (j, all_results[j]['score'], all_results[j]['genome'])
+        last_score = 0.0
+        for k in sorted(all_results.keys()):
+            score = all_results[k]['score']
+            genome = all_results[k]['genome']
+            print '%6d: %.3f (%.4f) %s' % (k, score, score-last_score, genome)
+            last_score = score
         best_genomes = [r['genome'] for r in results]    
     return all_results    
  

@@ -22,6 +22,8 @@ Created on 17/12/2011
 
 import os
 import random
+import time
+import logging
 from math import *
 
 # The tunable parameters in the code
@@ -35,8 +37,11 @@ NUM_ROULETTE_TRYS = 2000
 # Test for convergence. Top CONVERGENCE_NUMBER scores are the same
 CONVERGENCE_NUMBER = 30
 
+logging.basicConfig(filename='ga.log',level=logging.DEBUG)
+
 def LOG(s):
-    print s
+    logging.debug(s)
+    print time.ctime(), s
 
 def make_result(genome, score):
     return {'genome':genome, 'score':score,  'idx':-1, 'weight': -1.0}
@@ -158,6 +163,11 @@ def make_random_genome(genome_len, allowed_values, base_genome = None):
     while len(genome) < genome_len:
         genome.add(random.choice(allowed_values))
     return sorted(genome)
+    
+def mutate(genome, allowed_values):
+    missing = random.randint(0, len(genome)-1)
+    genome1 = [genome[i] for i in range(len(genome)) if i != missing]
+    return make_random_genome(len(genome), allowed_values, genome1)
 
 def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
     """Run GA to find genome for which eval_func(genome) give highest score.
@@ -184,18 +194,20 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
         for i in range(len(allowed_values)):
             if i+genome_len <= len(allowed_values):
                 genome = allowed_values[i:i+genome_len]
-                #print 'genome 1 %s' % genome
             else:
                 genome = allowed_values[i:] + allowed_values[:genome_len - len(allowed_values) + i]
-                #print 'genome 2 %s' % genome
             assert(len(genome) == genome_len)    
             add_genome(genome)
             
-        while len(existing_genomes) < NUM_INITIAL_GENOMES:
+        for i in range(1000):
+            if len(existing_genomes) >= NUM_INITIAL_GENOMES:
+                break
             if base_genomes:
                 for g in base_genomes:
                     add_genome(make_random_genome(genome_len, allowed_values, g))
                     add_genome(make_random_genome(genome_len, allowed_values))
+                    if len(existing_genomes) >= NUM_INITIAL_GENOMES:
+                        break
             else:
                 add_genome(make_random_genome(genome_len, allowed_values))
                 
@@ -226,24 +238,31 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
                 return False
         return True
 
+    print time.ctime(), 'About to make_initial_genomes'
     make_initial_genomes(genome_len, allowed_values, base_genomes)
+    print time.ctime(), 'Done make_initial_genomes: %d genomes' %  len(existing_genomes)
     for cnt in range(NUM_ROUNDS):
         g1,g2 = get_new_genomes()
         if not (g1 or g2):
-            print '1. Converged after %d GA rounds. No more untested genomes' % cnt
+            print time.ctime(), '1. Converged after %d GA rounds. No more untested genomes' % cnt
             break
         add_genome(g1)
         add_genome(g2)
-        if cnt > 0 and cnt % 100 == 0:
-            print '  Round %4d. Best = %s' % (cnt, result_to_str(results[0]))
+        
+        # Not sure if mutation helps at all
+        add_genome(mutate(results[0]['genome'],allowed_values))
+            
+        if cnt > 0 and cnt % 10 == 0:
+            print time.ctime(), 'Round %4d. Best = %s' % (cnt, result_to_str(results[0]))
+            
         if has_converged(history_of_best):
-            print '2. Converged after %d GA rounds. Top %d genomes have same score' % (cnt, CONVERGENCE_NUMBER)
+            print time.ctime(), '2. Converged after %d GA rounds. Top %d genomes have same score' % (cnt, CONVERGENCE_NUMBER)
             break
 
-    for r in results[:10]:
-        print result_to_str(r)
+    for r in results[:5]:
+        print '   ', result_to_str(r)
         
-    return results
+    return results[:NUM_INITIAL_GENOMES]
 
 def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = None):
     for i in range(num_passes):
