@@ -27,7 +27,7 @@ def get_pcg_counts(year):
     return common.get_dict_all(get_pcg_filename(year), int) 
 
 def get_total_pcg_filename(year):
-    return r'data\pcg_totals_Y%d_Claims_20.csv' % year    
+    return r'data\pcg_totals_Y%d_Claims.csv' % year    
 
 def show_totals_by_dih(year):
     print 'show_totals_by_dih(year=%d)' % year
@@ -274,15 +274,19 @@ if False:
     show_dih_counts(3)
 
 if True:
+    import random
+     # Set random seed so that each run gives same results
+    random.seed(333)
+
     all_results = {}
     for i in (2,3):
         all_results[i] = find_best_features(i)
         results = all_results[i]
         for j in sorted(results.keys()):
-            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list']) 
+            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome']) 
     common.HEADING()    
     for i in sorted(all_results.keys()):
         print 'year = %d' % i
         results = all_results[i]
         for j in sorted(results.keys()):
-            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['list'])        
+            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome'])        

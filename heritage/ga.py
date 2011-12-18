@@ -11,10 +11,22 @@ import os
 import random
 from math import *
 
+WEIGHT_RATIO = 0.95 # 0.90
+NUM_ROUNDS = 2000
+NUM_INITIAL_GENOMES = 100
+NUM_ROULETTE_TRYS = 2000
+# Test for convergence. Top CONVERGENCE_NUMBER scores are the same
+CONVERGENCE_NUMBER = 30
+
 def LOG(s):
     print s
 
-WEIGHT_RATIO = 0.8
+def make_result(genome, score):
+    return {'genome':genome, 'score':score,  'idx':-1, 'weight': -1.0}
+    
+def result_to_str(r):
+    return '%.3f, %s, %3d, %6.3f' % (r['score'], r['genome'], r['idx'], r['weight']) 
+    
 
 def apply_weights(roulette):
     """ Add 'idx' and 'weight' keys to elements in a roulette dict 
@@ -85,6 +97,9 @@ def make_shuffle_list(size, max_val):
 
 def cross_over(c1, c2):
     """ Swap half the elements in lists <c1> and <c2> """
+    if len(c1) != len(c2):
+        print 'c1', c1
+        print 'c2', c2
     assert(len(c1) == len(c2))
     assert(len(c1) > 0)
     assert(len(c2) > 0)
@@ -115,23 +130,20 @@ def get_eval_result(eval_func, genome):
     """ Returns a dict that shows results of running <eval_func> classfier on
         <genome> """
     score = eval_func(genome)
-    result = {'genome':genome, 'score':score}
-    LOG('get_eval_result => genome=%s, score=%s' % (result['genome'], result['score']))
-    return result
+    r = make_result(genome, score)
+    #LOG('get_eval_result => %s' % result_to_str(r))
+    return r
     
-def make_random_genome(genome_len, allowed_values):
-    genome = set([])
+def make_random_genome(genome_len, allowed_values, base_genome = None):
+    if base_genome:
+        genome = set(base_genome) 
+    else:
+        genome = set([])
     while len(genome) < genome_len:
         genome.add(random.choice(allowed_values))
     return sorted(genome)
 
-NUM_ROUNDS = 1000
-NUM_INITIAL_GENOMES = 100
-NUM_ROULETTE_TRYS = 1000
-# Test for convergence. Top CONVERGENCE_NUMBER scores are the same
-CONVERGENCE_NUMBER = 10
-
-def run_ga(eval_func, genome_len, allowed_values):  
+def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
     """Run GA to find genome for which eval_func(genome) give highest score.
         A genome is a list of unique integers (could be a set).
         New genomes are created by cross-over of the starting genomes
@@ -143,45 +155,63 @@ def run_ga(eval_func, genome_len, allowed_values):
     existing_genomes = []
     history_of_best = []
 
+    def add_genome(genome):
+        if genome:
+            if not genome in existing_genomes:
+                r = get_eval_result(eval_func, genome)
+                if len(results) > 0:
+                    assert(len(r['genome']) == len(results[0]['genome']))
+                results.append(r)
+                existing_genomes.append(genome)
+                results.sort(key = lambda x: -x['score']) 
+
+    def make_initial_genomes(genome_len, allowed_values, base_genomes):
+        for i in range(len(allowed_values)):
+            if i+genome_len <= len(allowed_values):
+                genome = allowed_values[i:i+genome_len]
+                #print 'genome 1 %s' % genome
+            else:
+                genome = allowed_values[i:] + allowed_values[:genome_len - len(allowed_values) + i]
+                #print 'genome 2 %s' % genome
+            assert(len(genome) == genome_len)    
+            add_genome(genome)
+            
+        while len(existing_genomes) < NUM_INITIAL_GENOMES:
+            if base_genomes:
+                for g in base_genomes:
+                    add_genome(make_random_genome(genome_len, allowed_values, g))
+                    add_genome(make_random_genome(genome_len, allowed_values))
+            else:
+                add_genome(make_random_genome(genome_len, allowed_values))
+                
     def get_new_genomes(): 
         """Spin roulette wheel repeatedly in search of a new binary vector"""
         for j in range(NUM_ROULETTE_TRYS):
             i1,i2 = spin_roulette_wheel_twice(results)
-            g1,g2 = cross_over(results[i1]['subset'], results[i2]['subset'])
+            g1,g2 = cross_over(results[i1]['genome'], results[i2]['genome'])
             if g1 in existing_genomes: g1 = None
             if g2 in existing_genomes: g2 = None
             if g1 or g2: return g1,g2
         return None, None
 
-    def add_genome(genome):
-        if genome:
-            if not genome in existing_genomes:
-                r = get_eval_result(eval_func, genome)
-                results.append(r)
-                existing_genomes.append(genome)
-                results.sort(key = lambda x: -x['score'])  
-
-    def has_converged():            
+    def has_converged(history_of_best):
         """Test for convergence. Top CONVERGENCE_NUMBER scores are the same"""
-      
-        LOG(str(['%.1f%%' % x['score'] for x in results[:CONVERGENCE_NUMBER]]))
+
+        #print 'history_of_best', history_of_best 
         history_of_best.append(results[0]['score'])
-        LOG('history_of_best: %s => %s' % (results[0]['score'], history_of_best[:CONVERGENCE_NUMBER]))
         history_of_best.sort(key = lambda x: -x)
-        if len(history_of_best) >= convergence_number:
-            LOG('history_of_best = %s' % history_of_best[:CONVERGENCE_NUMBER])
-        converged = True
-        for i in range(1, CONVERGENCE_NUMBER):
-            if history_of_best[i] != history_of_best[0]:
-                converged = False
-                break
-        return converged
-  
-    def make_initial_genomes(genome_len, allowed_values):
-        while len(existing_genomes) < NUM_INITIAL_GENOMES:
-            add_genome(make_random_genome(genome_len, allowed_values))
-    
-    make_initial_genomes(genome_len, allowed_values)
+        history_of_best = history_of_best[:CONVERGENCE_NUMBER]
+                
+        #LOG('history_of_best: %s' % history_of_best)
+                
+        if len(history_of_best) < CONVERGENCE_NUMBER:
+            return False
+        for h in history_of_best[1:CONVERGENCE_NUMBER]:
+            if h != history_of_best[0]:
+                return False
+        return True
+
+    make_initial_genomes(genome_len, allowed_values, base_genomes)
     for cnt in range(NUM_ROUNDS):
         g1,g2 = get_new_genomes()
         if not (g1 or g2):
@@ -189,17 +219,20 @@ def run_ga(eval_func, genome_len, allowed_values):
             break
         add_genome(g1)
         add_genome(g2)
-        if has_converged():
+        #print 'history_of_best', history_of_best, cnt 
+        if has_converged(history_of_best):
             print '2. Converged after %d GA rounds. Top %d genomes have same score' % (cnt, CONVERGENCE_NUMBER)
             break
 
-    print results
+    for r in results[:10]:
+        print result_to_str(r)
+        
     return results
 
 if __name__ == '__main__':
     def eval_func(chromosome):
         return sum(chromosome)
-    genome_len = 5 
+    genome_len = 10 
     allowed_values = range(100)   
     results = run_ga(eval_func, genome_len, allowed_values)
     

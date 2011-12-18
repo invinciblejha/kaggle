@@ -29,7 +29,7 @@ from pyevolve import Selectors
 from pyevolve import Consts
 from pyevolve import Crossovers
 import common 
-import ga
+import ga as GAX
 
 if False:
     digits = datasets.load_digits()
@@ -173,12 +173,18 @@ def get_best_features(X, y):
     
     allowed_values = range(num_features)
     all_results = {}
+    best_genomes = None
     for n in range(2, num_features):
+    #for n in range(2, 5):
         genome_len = n
-        results = ga.run_ga(eval_func, genome_len, allowed_values)
+        results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
         # results are sorted best to worst so this gets best results
         # !@#$ Keep all results and use these to seed n+1 round
         all_results[n] = results[0] 
+        for j in sorted(all_results.keys()):
+            print '%6d: %.3f %s' % (j, all_results[j]['score'], all_results[j]['genome'])
+        best_genomes = [r['genome'] for r in results]    
+    return all_results    
     
     if False:
         def eval_func_binary(chromosome):
@@ -247,7 +253,7 @@ def get_most_predictive_feature_set(X, y, feature_indices):
         print 'y=%d: %5d vals = %.3f of population' % (v, sum(y == v), sum(y == v)/y.shape[0])
     print 'all: %5d vals = %.3f of population' % (y.shape[0], 1.0)    
     common.SUBHEADING()
-    X,y = resample_equal_y(X, y, 0.1)
+    X,y = resample_equal_y(X, y, 1.0)
     
     return get_best_features(X, y)
   
