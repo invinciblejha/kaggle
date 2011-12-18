@@ -28,7 +28,10 @@ Top Featues
 -----------
 *  1 = Myocardial infarction.
 *  3 = Arthropathies and spine disorders
-* 12 = Gastrointestinal hemorrhage; miscellaneous disorders of stomach and duodenum; diverticulitis; abdominal symptoms, nausea with vomiting; blood in stool
+* 12 = Gastrointestinal hemorrhage; miscellaneous disorders of stomach and duodenum; 
+diverticulitis; abdominal symptoms, nausea with vomiting; blood in stool
 * 34 = Pregnancy     
 * 28 = All other neurologic problems and mental disorders (other than drug overdoses); senility. 
-* 27 = External causes of injury; remaining supplemental classification of factors influencing  health status and contact with health services.     
+* 27 = External causes of injury; remaining supplemental classification of factors 
+influencing  health status and contact with health services.     
+*  5 = chemotherapy encounters where cancer not specified
