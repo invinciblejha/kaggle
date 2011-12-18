@@ -279,7 +279,7 @@ if True:
     random.seed(333)
 
     all_results = {}
-    for i in (2,3):
+    for i in (3,2):
         all_results[i] = find_best_features(i)
         results = all_results[i]
         for j in sorted(results.keys()):

@@ -1,6 +1,19 @@
 from __future__ import division
 """
-A genetic algorithm implementation
+A genetic algorithm implementation for selecting features in supervised learning problems
+=========================================================================================
+Algorithm
+---------
+Perform maximal cross-over.
+Select best candidates based on ranking of scores. Prob of selection = WEIGHT_RATIO^rank
+ where  WEIGHT_RATIO is a tunable parameter, typically 0.8 - 0.95.  
+
+Basic entitites
+---------------
+result = {'genome':genome, 'score':score,  'idx':i, 'weight': w}
+    genome is a set of feature indexes
+    score is the genome's score. Higher is better
+    idx and weight are used internally
 
 Created on 17/12/2011
 
@@ -11,6 +24,10 @@ import os
 import random
 from math import *
 
+# The tunable parameters in the code
+#
+# Prob of selection = WEIGHT_RATIO^rank. Thus loweer WEIGHT_RATIO select more genomes with higher
+# ranking scores 
 WEIGHT_RATIO = 0.95 # 0.90
 NUM_ROUNDS = 2000
 NUM_INITIAL_GENOMES = 100
@@ -26,7 +43,6 @@ def make_result(genome, score):
     
 def result_to_str(r):
     return '%.3f, %s, %3d, %6.3f' % (r['score'], r['genome'], r['idx'], r['weight']) 
-    
 
 def apply_weights(roulette):
     """ Add 'idx' and 'weight' keys to elements in a roulette dict 
@@ -149,8 +165,7 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
         New genomes are created by cross-over of the starting genomes
     """
     # Set random seed so that each run gives same results
-    random.seed(555)
-
+    
     results = []
     existing_genomes = []
     history_of_best = []
@@ -227,6 +242,12 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
     for r in results[:10]:
         print result_to_str(r)
         
+    return results
+
+def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = None):
+    for i in range(num_passes):
+        results = run_ga(eval_func, genome_len, allowed_values, base_genomes)
+        base_genomes = [r['genome'] for r in results]
     return results
 
 if __name__ == '__main__':
