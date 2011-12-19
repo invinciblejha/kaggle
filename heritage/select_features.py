@@ -125,8 +125,8 @@ def get_best_features(X, y):
     for n in range(2, 12):
     #for n in range(2, 5):
         genome_len = n
-        results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
-        #results = GAX.run_ga2(eval_func, genome_len, allowed_values, 3, best_genomes)
+        #results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
+        results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)
         # results are sorted best to worst so this gets best results
         all_results[n] = results[0] 
         last_score = 0.0

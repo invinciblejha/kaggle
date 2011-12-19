@@ -25,12 +25,14 @@ import random
 import time
 import logging
 from math import *
+import common
 
 # The tunable parameters in the code
 #
-# Probability  of selection = WEIGHT_RATIO^rank. Thus lower WEIGHT_RATIO selects more genomes with 
+# Probability of selection = WEIGHT_RATIO^rank. Thus lower WEIGHT_RATIO selects more genomes with 
 #  higher anking scores 
-WEIGHT_RATIO = 0.95 # 0.90
+BEST_WEIGHT_RATIO = 0.95
+WEIGHT_RATIOS = [0.99, 0.98, BEST_WEIGHT_RATIO, 0.90, 0.85, 0.80] 
 # Number of rounds to wait for convergence
 NUM_ROUNDS = 1000
 # Number of genomes
@@ -41,6 +43,10 @@ NUM_ROULETTE_TRYS = 2000
 CONVERGENCE_NUMBER = 30
 
 logging.basicConfig(filename='ga.log',level=logging.DEBUG)
+
+def set_weight_ratio(weight_ratio):
+    global _weight_ratio
+    _weight_ratio = weight_ratio 
 
 def LOG(s):
     logging.debug(s)
@@ -67,7 +73,7 @@ def apply_weights(roulette):
     
     # Set weight based on score order
     for i,x in enumerate(roulette):
-        x['weight'] = WEIGHT_RATIO**(i+1)
+        x['weight'] = _weight_ratio **(i+1)
     total = float(sum([x['weight'] for x in roulette]))
     for x in roulette:
         x['weight'] = x['weight']/total
@@ -171,7 +177,7 @@ def mutate(genome, allowed_values):
     genome1 = [genome[i] for i in range(len(genome)) if i != missing]
     return make_random_genome(len(genome), allowed_values, genome1)
 
-def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
+def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
     """Run GA to find genome for which eval_func(genome) give highest score.
         A genome is a list of unique integers (could be a set).
         New genomes are created by cross-over of the starting genomes
@@ -206,9 +212,9 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             if len(existing_genomes) >= POPULATION_SIZE:
                 break
             if base_genomes:
-                for j,g in enumerate(base_genomes[:POPULATION_SIZE//5]):
+                for j,g in enumerate(base_genomes[:POPULATION_SIZE//4]):
                     add_genome(make_random_genome(genome_len, allowed_values, g))
-                    if j % 2:
+                    if j % 3 == 0:
                         add_genome(make_random_genome(genome_len, allowed_values))
                     if len(existing_genomes) >= POPULATION_SIZE:
                         break
@@ -270,10 +276,28 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
         
     return results[:POPULATION_SIZE]
 
+def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
+    """Run GA to find genome for which eval_func(genome) give highest score.
+        A genome is a list of unique integers (could be a set).
+        New genomes are created by cross-over of the starting genomes
+    """    
+    set_weight_ratio(BEST_WEIGHT_RATIO)
+    return _run_ga(eval_func, genome_len, allowed_values, base_genomes)  
+    
 def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = None):
+    common.SUBHEADING()
+    best_genome, best_score = None, 0.0
     for i in range(num_passes):
+        print 'pass %d' % i
+        set_weight_ratio(WEIGHT_RATIOS[i % len(WEIGHT_RATIOS)])
         results = run_ga(eval_func, genome_len, allowed_values, base_genomes)
         base_genomes = [r['genome'] for r in results]
+        if results[0]['genome'] == best_genome:
+            print 'Same genome, stopping'
+            break
+        if results[0]['score'] > best_score and _weight_ratio <= BEST_WEIGHT_RATIO:    
+            best_genome = results[0]['genome'] 
+            best_score = results[0]['score'] 
     return results
 
 if __name__ == '__main__':
