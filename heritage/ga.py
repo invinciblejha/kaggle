@@ -36,7 +36,7 @@ WEIGHT_RATIOS = [0.99, 0.98, BEST_WEIGHT_RATIO, 0.90, 0.85, 0.80]
 # Number of rounds to wait for convergence
 NUM_ROUNDS = 1000
 # Number of genomes
-POPULATION_SIZE = 100
+POPULATION_SIZE = 500
 # Number of times to spin roulette wheel to get unique new genomes
 NUM_ROULETTE_TRYS = 2000
 # Test for convergence. Top CONVERGENCE_NUMBER scores are the same

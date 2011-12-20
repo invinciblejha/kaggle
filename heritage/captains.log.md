@@ -113,3 +113,42 @@ influencing  health status and contact with health services.
 * 23 = All other endocrine, metabolic and miscellaneous immune
 disorders (but not including systemic lupus erythematosus or
 rheumatoid arthritis). 
+
+Including Age and Sex at [0,1]
+==============================
+year = 2
+--------
+     2: 0.596 [0, 36] ['AgeAtFirstClaim', 'PNEUM']
+     3: 0.607 [0, 5, 36] ['AgeAtFirstClaim', 'APPCHOL', 'PNEUM']
+     4: 0.617 [0, 14, 28, 36] ['AgeAtFirstClaim', 'FXDISLC', 'MISCL1', 'PNEUM']
+     5: 0.618 [0, 14, 27, 28, 36] ['AgeAtFirstClaim', 'FXDISLC', 'MISCHRT', 'MISCL1', 'PNEUM']
+     6: 0.619 [0, 13, 14, 28, 36, 46] ['AgeAtFirstClaim', 'FLaELEC', 'FXDISLC', 'MISCL1', 'PNEUM', 'STROKE']
+     7: 0.625 [0, 5, 14, 28, 30, 36, 47] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'MISCL1', 'MSC2a3', 'PNEUM', 'TRAUMA']
+     8: 0.626 [0, 5, 14, 18, 28, 30, 36, 47] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GYNECA', 'MISCL1', 'MSC2a3', 'PNEUM', 'TRAUMA']
+     9: 0.627 [0, 5, 13, 14, 27, 28, 30, 36, 47] ['AgeAtFirstClaim', 'APPCHOL', 'FLaELEC', 'FXDISLC', 'MISCHRT', 'MISCL1', 'MSC2a3', 'PNEUM', 'TRAUMA']
+    10: 0.628 [0, 5, 13, 14, 18, 27, 28, 30, 36, 47] ['AgeAtFirstClaim', 'APPCHOL', 'FLaELEC', 'FXDISLC', 'GYNECA', 'MISCHRT', 'MISCL1', 'MSC2a3', 'PNEUM', 'TRAUMA']
+    11: 0.628 [0, 3, 5, 13, 14, 18, 27, 28, 30, 36, 47] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'FLaELEC', 'FXDISLC', 'GYNECA', 'MISCHRT', 'MISCL1', 'MSC2a3', 'PNEUM', 'TRAUMA']
+    12: 0.629 [0, 3, 5, 14, 18, 27, 28, 30, 36, 40, 41, 47] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'FXDISLC', 'GYNECA', 'MISCHRT', 'MISCL1', 'MSC2a3', 'PNEUM', 'RENAL3', 'RESPR4', 'TRAUMA']
+    13: 0.629 [0, 3, 5, 8, 14, 18, 27, 28, 30, 36, 40, 41, 47] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CANCRB', 'FXDISLC', 'GYNECA', 'MISCHRT', 'MISCL1', 'MSC2a3', 'PNEUM', 'RENAL3', 'RESPR4', 'TRAUMA']
+year = 3
+--------
+     2: 0.574 [0, 5] ['AgeAtFirstClaim', 'APPCHOL']
+     3: 0.593 [0, 36, 41] ['AgeAtFirstClaim', 'PNEUM', 'RESPR4']
+     4: 0.597 [0, 5, 29, 36] ['AgeAtFirstClaim', 'APPCHOL', 'MISCL5', 'PNEUM']
+     5: 0.604 [0, 5, 29, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'MISCL5', 'PNEUM', 'RESPR4']
+     6: 0.607 [0, 5, 29, 30, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'MISCL5', 'MSC2a3', 'PNEUM', 'RESPR4']
+     7: 0.613 [0, 5, 20, 29, 30, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'HEART4', 'MISCL5', 'MSC2a3', 'PNEUM', 'RESPR4']
+     8: 0.615 [0, 5, 7, 18, 20, 29, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRA', 'GYNECA', 'HEART4', 'MISCL5', 'PNEUM', 'RESPR4']
+     9: 0.616 [0, 5, 12, 18, 19, 20, 29, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'COPD', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PNEUM', 'RESPR4']
+    10: 0.617 [0, 5, 12, 18, 19, 20, 29, 33, 36, 41] ['AgeAtFirstClaim', 'APPCHOL', 'COPD', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PERINTL', 'PNEUM', 'RESPR4']
+    11: 0.617 [0, 5, 12, 18, 19, 20, 29, 33, 36, 41, 43] ['AgeAtFirstClaim', 'APPCHOL', 'COPD', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PERINTL', 'PNEUM', 'RESPR4', 'SEIZURE']
+    12: 0.617 [0, 4, 5, 6, 10, 18, 19, 20, 29, 33, 36, 41] ['AgeAtFirstClaim', 'AMI', 'APPCHOL', 'ARTHSPIN', 'CATAST', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PERINTL', 'PNEUM', 'RESPR4']
+    13: 0.618 [0, 4, 5, 6, 18, 19, 20, 29, 32, 33, 36, 41, 43] ['AgeAtFirstClaim', 'AMI', 'APPCHOL', 'ARTHSPIN', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'ODaBNCA', 'PERINTL', 'PNEUM', 'RESPR4', 'SEIZURE']
+    
+6: 0.594 [1, 3, 12, 16, 23, 34] =>  0.619 [0, 13(11), 14(12), 28(26), 36(34), 46(44)] 
+    3 (1= Myocardial infarction) is masked when age is included
+    Older people have more more heart attacks
+    32 (34 = Pregnancy) goes away as well
+    How does age account for pregnancy?
+    12 and 34 remain 'FXDISLC', 'PNEUM',
+    
