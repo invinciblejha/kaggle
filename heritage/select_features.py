@@ -121,9 +121,9 @@ def get_best_features(X, y):
     allowed_values = range(num_features)
     all_results = {}
     best_genomes = None
-    for n in range(1, num_features+1):
+    #for n in range(1, num_features+1):
     #for n in range(2, 12):
-    #for n in range(2, 5):
+    for n in range(2, 5):
         genome_len = n
         #results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
         results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)

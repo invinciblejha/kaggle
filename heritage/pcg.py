@@ -249,9 +249,6 @@ def getXy_for_dict(year, pcg_keys, counts_dict):
     """
 
     print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(pcg_keys))
-    
-    pcg_filename = get_pcg_filename(year-1)
-    print 'pcg_filename=%s' % pcg_filename
 
     dih_dict = get_dih(year)
 
@@ -300,9 +297,9 @@ def getXy_pcg(year):
             
     print 'getXy_pcg(year=%d)' % year
    
-    pcg_keys, pcg_counts_dict = get_pcg_counts_dict(year-1)
-    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
-    return getXy_for_dict(year, pcg_keys, pcg_counts_dict)
+    keys, counts_dict = get_pcg_counts_dict(year-1)
+    X,y = getXy_for_dict(year, keys, counts_dict)
+    return X,y,keys
 
 def getXy_patient(year):
     """For specified year, return
@@ -314,18 +311,28 @@ def getXy_patient(year):
 
     print 'getXy_patient(year=%d)' % year
 
-    pcg_keys, pcg_counts_dict = get_patient_dict()
-    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
-    return getXy_for_dict(year, pcg_keys, pcg_counts_dict)    
+    keys, counts_dict = get_patient_dict()
+    X,y = getXy_for_dict(year, keys, counts_dict)
+    return X,y,keys 
+
+def getXy_all(year):    
+    patient_keys, patient_dict = get_patient_dict()
+    pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
+    keys, counts_dict = common.combine_dicts(patient_keys, patient_dict, pcg_keys, pcg_dict)  
+    X,y = getXy_for_dict(year, keys, counts_dict)
+    return X,y,keys
     
 def find_best_features(year, features):
     import select_features
     print 'find_best_features(year=%d)' % year
     if features == 'pcg':
-        X,y = getXy_pcg(year)
+        X,y,keys = getXy_pcg(year)
     elif features == 'patient':
-        X,y = getXy_patient(year)    
-    return select_features.get_most_predictive_feature_set(X, y)  
+        X,y,keys = getXy_patient(year)  
+    elif features == 'all':
+        X,y,keys = getXy_all(year)
+    
+    return select_features.get_most_predictive_feature_set(X, y), keys  
 
 def make_predictions(year):
     import predict
@@ -350,21 +357,27 @@ if True:
     random.seed(333)
     np.random.seed(333)
     
-    features = 'patient'
+    #features = 'patient'
     #features = 'pcg'
-
+    features = 'all'
+    
+    def show_result(results, keys, j):
+        r = results[j]
+        decoded_genome = [keys[g+1] for g in r['genome']]
+        print '%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome)
+        
     all_results = {}
     for i in (3,2):
-        all_results[i] = find_best_features(i, features)
+        all_results[i], keys = find_best_features(i, features)
         results = all_results[i]
         for j in sorted(results.keys()):
-            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome']) 
+            show_result(results, keys, j) 
     common.HEADING()    
     for i in sorted(all_results.keys()):
         print 'year = %d' % i
         results = all_results[i]
         for j in sorted(results.keys()):
-            print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome'])        
+            show_result(results, keys, j)        
             
 if False:
     for year in (3,2):

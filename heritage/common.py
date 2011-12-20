@@ -146,4 +146,15 @@ def get_dict_all(filename, xform, verbose = False):
     print '  num rows = %d' % i    
     return column_keys, data_dict
     
+def combine_dicts(columns1, dict1, columns2, dict2):
+    """Return all columns of dict1 and dict2 that have 
+       MemberID as keys
+    """    
+    combined_columns = columns1 + columns2
+    keys = set(dict1.keys()) &  set(dict2.keys())
+    combined_dict = {}
+    for k in keys:
+        combined_dict[k] = dict1[k] + dict2[k]
+    return combined_columns, combined_dict    
+    
     
