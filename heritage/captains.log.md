@@ -144,11 +144,14 @@ year = 3
     11: 0.617 [0, 5, 12, 18, 19, 20, 29, 33, 36, 41, 43] ['AgeAtFirstClaim', 'APPCHOL', 'COPD', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PERINTL', 'PNEUM', 'RESPR4', 'SEIZURE']
     12: 0.617 [0, 4, 5, 6, 10, 18, 19, 20, 29, 33, 36, 41] ['AgeAtFirstClaim', 'AMI', 'APPCHOL', 'ARTHSPIN', 'CATAST', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'PERINTL', 'PNEUM', 'RESPR4']
     13: 0.618 [0, 4, 5, 6, 18, 19, 20, 29, 32, 33, 36, 41, 43] ['AgeAtFirstClaim', 'AMI', 'APPCHOL', 'ARTHSPIN', 'GYNECA', 'HEART2', 'HEART4', 'MISCL5', 'ODaBNCA', 'PERINTL', 'PNEUM', 'RESPR4', 'SEIZURE']
+
+Top Features
+------------
     
-6: 0.594 [1, 3, 12, 16, 23, 34] =>  0.619 [0, 13(11), 14(12), 28(26), 36(34), 46(44)] 
-    3 (1= Myocardial infarction) is masked when age is included
-    Older people have more more heart attacks
-    32 (34 = Pregnancy) goes away as well
-    How does age account for pregnancy?
-    12 and 34 remain 'FXDISLC', 'PNEUM',
+* 6: 0.594 [1, 3, 12, 16, 23, 34] =>  0.619 [0, 13(11), 14(12), 28(26), 36(34), 46(44)] 
+*  3 (1= Myocardial infarction) is masked when age is included
+*   Older people have more more heart attacks
+*  32 (34 = Pregnancy) goes away as well
+*    How does age account for pregnancy?
+*  12 and 34 remain 'FXDISLC', 'PNEUM',
     
