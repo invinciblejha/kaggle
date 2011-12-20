@@ -285,20 +285,24 @@ def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
     return _run_ga(eval_func, genome_len, allowed_values, base_genomes)  
     
 def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = None):
+    """Run GA multiple times to see if this improves results.
+        Will note some results as I test
+    """
     common.SUBHEADING()
-    best_genome, best_score = None, 0.0
+    best_results = None
     for i in range(num_passes):
-        print 'pass %d' % i
         set_weight_ratio(WEIGHT_RATIOS[i % len(WEIGHT_RATIOS)])
+        print 'pass %d: weight=%.2f' % (i, _weight_ratio)
         results = run_ga(eval_func, genome_len, allowed_values, base_genomes)
         base_genomes = [r['genome'] for r in results]
-        if results[0]['genome'] == best_genome:
-            print 'Same genome, stopping'
-            break
-        if results[0]['score'] > best_score and _weight_ratio <= BEST_WEIGHT_RATIO:    
-            best_genome = results[0]['genome'] 
-            best_score = results[0]['score'] 
-    return results
+        if not best_results or results[0]['score'] > best_results[0]['score']:    
+            best_results = results
+        elif results[0]['genome'] == best_results[0]['genome']: 
+            # The higher weight ratios are to created diversity in the genome population
+            if _weight_ratio <= BEST_WEIGHT_RATIO:
+                print 'Same genome, stopping'
+                break
+    return best_results
 
 if __name__ == '__main__':
     def eval_func(chromosome):

@@ -82,23 +82,66 @@ def get_dict(filename, column_key, xform):
             data_dict[k] = x
     return data_dict
 
-def get_dict_all(filename, xform):
+
+_regex_int = re.compile(r'(\d+)')
+def get_int_part(s):
+    return int(_regex_int.search(s).group(1))
+    
+_sex_dict = {'M':0, 'F':1}    
+def get_sex(s):
+    return _sex_dict[s[0]]
+
+DEFAULT_MAP_FUNCTION = int    
+MAP_FUNCTIONS = {
+    'DrugCount.csv' : { 
+        'Year' : lambda x: int(x[1]), 
+        'DSFS' : get_int_part,  
+        'DrugCount' : get_int_part  
+    },
+    'LabCount.csv' : { 
+        'Year' : lambda x: int(x[1]), 
+        'DSFS' : get_int_part,  
+        'LabCount' : get_int_part  
+    },
+    'Members.csv' : { 
+        'AgeAtFirstClaim' : get_int_part, 
+        'Sex' : get_sex    
+    }
+}
+
+def get_map_function(table, column):
+    if not table in MAP_FUNCTIONS.keys():
+        return DEFAULT_MAP_FUNCTION
+    if not column in MAP_FUNCTIONS[table].keys():
+        return DEFAULT_MAP_FUNCTION
+    return MAP_FUNCTIONS[table][column]    
+    
+def get_dict_all(filename, xform, verbose = False):
     """Return csv file dict with MemberID as keys
        xform is applied to all values
     """
     column_keys, get_data = get_csv(filename)
+    print 'column_keys', column_keys
     
+    if xform:
+        col_xforms = [xform for i in range(len(column_keys))]
+    else:    
+        col_xforms = [get_map_function(filename, column) for column in column_keys[1:]]
+        print col_xforms
+     
     print 'get_dict_all(filename=%s, column_keys=%s, xform=%s)' % (filename, column_keys, xform)
     data_dict = {}
     for i, (k,row) in enumerate(get_data()):
         out_row = []
-        for v in row:
-            try:
-                x = xform(v)
-            except:
-                print '+++ "%s" is invalid format in row %d' % (v,i)
-                x = 0    
-            out_row.append(x)        
+        try:
+            for j,v in enumerate(row):
+               x = col_xforms[j](v) #xform(v)
+               out_row.append(x)  
+        except:
+            if verbose:
+                print '+++ "%s" is invalid format for %s in row %d, col %d' % (v, 
+                    column_keys[j+1], i, j), row
+            continue       
         data_dict[k] = out_row
     print '  num rows = %d' % i    
     return column_keys, data_dict

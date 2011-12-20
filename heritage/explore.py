@@ -12,58 +12,6 @@ import csv
 import time
 import pickle
 
-def HEADING():
-    print  '=' * 80
-    
-def SUBHEADING():
-    print  '-' * 80
-    
-def summarize(title, a_list):
-    """Print some summary statistics about a_list"""
-    x = sorted(a_list)
-    print  '-' * 80
-    print 'Summary "%s":' % title
-    #print 'type = %s' % type(x)
-    print 'len = %d' % len(x)
-    print 'min = %d' % x[0]
-    print 'max = %d' % x[-1]
-    print 'mean = %f' % (sum(x)/len(x))
-    print 'median = %d' % x[len(x)//2]
-
-def get_csv(path):
-    data_reader = csv.reader(open(path , 'rb'), delimiter=',', quotechar='"')
-    column_keys = data_reader.next()
-    
-    def get_data():
-        for row in data_reader:
-            patient_key = row[0]
-            data = row[1:]
-            yield(patient_key, data)
-            
-    return column_keys, get_data
-    
-def get_dict(filename, column_key, xform):
-    """Return column with header <column_key> as a dict with MemberID as keys
-       xform is applied to all values
-    """
-    column_keys, get_data = get_csv(filename)
-    if not key:
-        return column_keys
-    
-    print 'filename=%s, key=%s, column_keys=%s, xform=%s' % (filename, key, column_keys, xform)
-    assert(key in column_keys[1:])
-    column = column_keys[1:].index(key)
-    data_dict = {}
-    for i,(k,v) in enumerate(get_data()):
-        try:
-            x = xform(v[column])
-        except:
-            #print '+++ "%s" is invalid format in row %d' % (v[column],i)
-            x = None    
-        if x is not None:
-            data_dict[k] = x
-    return column_keys, data_dict
-
 def get_annotated_data(filename, key, xform):
     column_keys, data_dict = get_dict(filename, key, xform)
     return {'filename':filename, 'column':key, 'data':data_dict}
@@ -312,20 +260,13 @@ LOOKUPS = [
     'Lookup ProcedureGroup.csv',
 ]    
 
-regex_int = re.compile(r'(\d+)')
+_regex_int = re.compile(r'(\d+)')
 def get_int_part(s):
-    #print '>%s' % s
-    #m = regex_int.search(s)
-    #print m
-    #print m.groups()
-    return int(regex_int.search(s).group(1))
+    return int(_regex_int.search(s).group(1))
     
+_sex_dict = {'M':0, 'F':1}    
 def get_sex(s):
-    if s[0] == 'M':
-        return 0
-    elif s[0] == 'F':
-        return 1
-    return None
+    return _sex_dict.get(s[0], None)
 
 DEFAULT_MAP_FUNCTION = int    
 MAP_FUNCTIONS = {
@@ -443,11 +384,12 @@ def get_pcg_index(pcg):
 
 def make_group_name(group):
     return os.path.join('CACHE', 'group%04d.pkl' % group)
-    
+
 DERIVED_PREFIX = 'derived_'
 DERIVED_COLUMN_KEYS = ['MemberID', 'NumClaims', 'PrimaryConditionGroup'] 
-     
-def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_KEYS, NUM_GROUPS = 100):
+
+def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_KEYS, 
+    NUM_GROUPS = 100):
     """This has got complicated due to python running slowing with large dicts
         Passes through input file multiple times and writes partial results to 
         disk (see group).

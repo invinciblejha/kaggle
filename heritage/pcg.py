@@ -11,20 +11,33 @@ from sklearn.linear_model import SGDClassifier
 import common
 
 def get_dih_filename(year):
+    """Return name of "days in hospital" spreadsheet for specified year"""
     return 'DaysInHospital_Y%d.csv' % year
 
-def get_dih(year):
-    """Return DaysInHospital_Y?.csv as a dict"""
-    return common.get_dict(get_dih_filename(year), 'DaysInHospital', int)
-
+def get_patient_filename():
+    return r'Members.csv'
+    
 def get_pcg_filename(year):
     return r'data\derived_all_counts_Y%d_Claims.csv' % year
     
-def get_pcg_counts(year):
+def get_dih(year):
+    """Return "days in hospital" spreadsheet for specified year 
+        DaysInHospital_Y?.csv as a dict
+    """
+    return common.get_dict(get_dih_filename(year), 'DaysInHospital', int)
+
+    
+def get_pcg_counts_dict(year):
     """Return dict whose keys are MemberIDs and values are PCG counts for all the PCG 
         categories
     """
     return common.get_dict_all(get_pcg_filename(year), int) 
+    
+def get_patient_dict():
+    """Return dict whose keys are MemberIDs and patient sex and age 
+        categories
+    """
+    return common.get_dict_all(get_patient_filename(), None)     
 
 def get_total_pcg_filename(year):
     return r'data\pcg_totals_Y%d_Claims.csv' % year    
@@ -34,12 +47,12 @@ def show_totals_by_dih(year):
     
     dih_dict = get_dih(year)
     dih_dict_keys = set(dih_dict.keys())
-    pcg_keys, pcg_counts = get_pcg_counts(year-1)
-    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
+    pcg_keys, pcg_counts_dict = get_pcg_counts_dict(year-1)
+    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
     
-    user_keys = sorted(pcg_counts.keys())
-    has_dih_keys = np.zeros(len(pcg_counts))
-    has_no_dih_keys = np.zeros(len(pcg_counts))
+    user_keys = sorted(pcg_counts_dict.keys())
+    has_dih_keys = np.zeros(len(pcg_counts_dict))
+    has_no_dih_keys = np.zeros(len(pcg_counts_dict))
     for i in range(len(has_dih_keys)):
         k = user_keys[i]
         if (k in dih_dict_keys):
@@ -48,7 +61,7 @@ def show_totals_by_dih(year):
             else:
                 has_no_dih_keys[i] = 1 
     
-    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
+    pcg_counts_a = np.array([pcg_counts_dict[k] for k in user_keys]) 
     print 'converted to numpy array'
     print 'pcg_counts_a.shape', pcg_counts_a.shape 
       
@@ -81,8 +94,7 @@ if False:
     exit()
 TOP_PCG_KEYS = ['RENAL2', 'HIPFX', 'CHF', 'AMI', 'RENAL1', 'FLaELEC', 'PRGNCY', 'HEMTOL', 'ROAMI', 
     'SEPSIS', 'PNCRDZ', 'STROKE', 'HEART2', 'CANCRA']
-  
-  
+
 def classify_nn(X, y, k):
     m = X.shape[0]
     m_test = int(m*0.25)
@@ -198,12 +210,12 @@ def show_dih_counts(year):
     member_ids = common.get_member_ids(pcg_filename)
     print '%d claims' % len(member_ids)
     
-    pcg_keys, pcg_counts = get_pcg_counts(year-1)
-    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
+    pcg_keys, pcg_counts_dict = get_pcg_counts_dict(year-1)
+    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
        
-    user_keys = sorted(pcg_counts.keys())
-    has_dih_keys = np.zeros(len(pcg_counts))
-    has_no_dih_keys = np.zeros(len(pcg_counts))
+    user_keys = sorted(pcg_counts_dict.keys())
+    has_dih_keys = np.zeros(len(pcg_counts_dict))
+    has_no_dih_keys = np.zeros(len(pcg_counts_dict))
     for i in range(len(has_dih_keys)):
         k = user_keys[i]
         if (k in dih_dict_keys):
@@ -212,7 +224,7 @@ def show_dih_counts(year):
             else:
                 has_no_dih_keys[i] = 1 
     
-    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
+    pcg_counts_a = np.array([pcg_counts_dict[k] for k in user_keys]) 
     pcg_counts_a = pcg_counts_a.astype(float)
     print 'converted to numpy array'
     print 'pcg_counts_a.shape', pcg_counts_a.shape 
@@ -226,40 +238,46 @@ def show_dih_counts(year):
             X = pcg_counts_a[:,idxs]
             Y = has_dih_keys
             classify(X, Y)
-def getXy(year):
-    print 'make_predictions(year=%d)' % year
+
+
+def getXy_for_dict(year, pcg_keys, counts_dict):
+    """For specified year, return
+        rows = patients
+        columns
+            X=counts for each pcg class
+            y=days in hospital
+    """
+
+    print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(pcg_keys))
     
     pcg_filename = get_pcg_filename(year-1)
     print 'pcg_filename=%s' % pcg_filename
-    
+
     dih_dict = get_dih(year)
+
+    # This seeems to be necessary. Not sure why
     dih_dict_keys = set(dih_dict.keys())
-    member_ids = common.get_member_ids(pcg_filename)
-    print '%d claims' % len(member_ids)
-    
-    pcg_keys, pcg_counts = get_pcg_counts(year-1)
-    print 'got dicts %d x %d' % (len(pcg_counts), len(pcg_keys))
-       
-    user_keys = sorted(pcg_counts.keys())
-    has_dih_keys = np.zeros(len(pcg_counts))
-    has_no_dih_keys = np.zeros(len(pcg_counts))
-    for i in range(len(has_dih_keys)):
+
+    user_keys = sorted(counts_dict.keys())
+    has_dih = np.zeros(len(counts_dict))
+    # We don't use has_no_dih!
+    has_no_dih = np.zeros(len(counts_dict))
+    for i in range(len(counts_dict)):
         k = user_keys[i]
-        if (k in dih_dict_keys):
+        if k in dih_dict_keys:
             if dih_dict[k] > 0:
-                has_dih_keys[i] = 1
+                has_dih[i] = 1
             else:
-                has_no_dih_keys[i] = 1 
-    
-    pcg_counts_a = np.array([pcg_counts[k] for k in user_keys]) 
-    pcg_counts_a = pcg_counts_a.astype(float)
-    print 'converted to numpy array'
-    print 'pcg_counts_a.shape', pcg_counts_a.shape 
-  
+                has_no_dih[i] = 1 
+
+    counts_list = [counts_dict[k] for k in user_keys]
+    print 'counts_list[0] = ', len(counts_list), counts_list[0], type(counts_list[0]), type(counts_list[0][0]) 
+    counts = np.array(counts_list, dtype=float) 
+    print 'counts:', counts.shape 
+   
     column_keys,_ = common.get_csv(get_pcg_filename(year))
-    feature_indices = [column_keys[1:].index(key) for key in TOP_PCG_KEYS]
-    X = pcg_counts_a
-    y = has_dih_keys
+    X = counts
+    y = has_dih
     
     # Normalize
     means = X.mean(axis=0)
@@ -269,20 +287,51 @@ def getXy(year):
         X[:,i] = X[:,i] - means[i]
         if abs(stds[i]) > 1e-4:
             X[:,i] = X[:,i]/stds[i]
-    
+
     return X,y 
+
+def getXy_pcg(year):
+    """For specified year, return
+        rows = patients
+        columns
+            X=counts for each pcg class
+            y=days in hospital
+    """
+            
+    print 'getXy_pcg(year=%d)' % year
+   
+    pcg_keys, pcg_counts_dict = get_pcg_counts_dict(year-1)
+    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
+    return getXy_for_dict(year, pcg_keys, pcg_counts_dict)
+
+def getXy_patient(year):
+    """For specified year, return
+        rows = patients
+        columns
+            X=age and sex
+            y=days in hospital
+    """
+
+    print 'getXy_patient(year=%d)' % year
+
+    pcg_keys, pcg_counts_dict = get_patient_dict()
+    print 'got dicts %d x %d' % (len(pcg_counts_dict), len(pcg_keys))
+    return getXy_for_dict(year, pcg_keys, pcg_counts_dict)    
     
-def find_best_features(year):
+def find_best_features(year, features):
     import select_features
     print 'find_best_features(year=%d)' % year
-    X,y = getXy(year)
+    if features == 'pcg':
+        X,y = getXy_pcg(year)
+    elif features == 'patient':
+        X,y = getXy_patient(year)    
     return select_features.get_most_predictive_feature_set(X, y)  
 
 def make_predictions(year):
     import predict
     PREDICTIVE_INDICES = [1, 3, 12, 23, 26, 27, 28, 34, 37, 40]
     print 'make_predictions(year=%d)' % year
-    X,y = getXy(year)
+    X,y = getXy_pcg(year)
     X = X[:,PREDICTIVE_INDICES]
     predict.predict(X,y)
     
@@ -300,10 +349,13 @@ if True:
      # Set random seed so that each run gives same results
     random.seed(333)
     np.random.seed(333)
+    
+    features = 'patient'
+    #features = 'pcg'
 
     all_results = {}
     for i in (3,2):
-        all_results[i] = find_best_features(i)
+        all_results[i] = find_best_features(i, features)
         results = all_results[i]
         for j in sorted(results.keys()):
             print '%6d: %.3f %s' % (j, results[j]['score'], results[j]['genome']) 
