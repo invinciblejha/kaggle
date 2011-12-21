@@ -272,19 +272,9 @@ def getXy_for_dict(year, pcg_keys, counts_dict):
     counts = np.array(counts_list, dtype=float) 
     print 'counts:', counts.shape 
    
-    column_keys,_ = common.get_csv(get_pcg_filename(year))
     X = counts
     y = has_dih
-    
-    # Normalize
-    means = X.mean(axis=0)
-    stds = X.std(axis=0)
-
-    for i in range(X.shape[1]):
-        X[:,i] = X[:,i] - means[i]
-        if abs(stds[i]) > 1e-4:
-            X[:,i] = X[:,i]/stds[i]
-
+   
     return X,y 
 
 def getXy_pcg(year):
@@ -322,15 +312,37 @@ def getXy_all(year):
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
     
-def find_best_features(year, features):
+def find_best_features(year, features, sex):
     import select_features
     print 'find_best_features(year=%d)' % year
     if features == 'pcg':
         X,y,keys = getXy_pcg(year)
     elif features == 'patient':
         X,y,keys = getXy_patient(year)  
+               
     elif features == 'all':
         X,y,keys = getXy_all(year)
+    
+    if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
+        # Get male or female population
+        sex_key = keys[1:].index('Sex')
+        if sex.lower()[0] == 'm':
+            p = X[:,sex_key] < 0.5
+        else:    
+            p = X[:,sex_key] > 0.5
+
+        X = X[p,:]
+        y = y[p]
+
+     # Normalize
+    means = X.mean(axis=0)
+    stds = X.std(axis=0)
+
+    for i in range(X.shape[1]):
+        X[:,i] = X[:,i] - means[i]
+        # Be careful not to increase variance of nearly constant variables
+        if abs(stds[i]) > 1e-1:
+            X[:,i] = X[:,i]/stds[i]    
     
     return select_features.get_most_predictive_feature_set(X, y), keys  
 
@@ -341,12 +353,11 @@ def make_predictions(year):
     X,y = getXy_pcg(year)
     X = X[:,PREDICTIVE_INDICES]
     predict.predict(X,y)
-    
-    
+
 if False:    
     show_totals_by_dih(2)            
     show_totals_by_dih(3)    
-        
+ 
 if False:
     show_dih_counts(2)
     show_dih_counts(3)
@@ -367,17 +378,22 @@ if True:
         print '%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome)
         
     all_results = {}
-    for i in (3,2):
-        all_results[i], keys = find_best_features(i, features)
-        results = all_results[i]
-        for j in sorted(results.keys()):
-            show_result(results, keys, j) 
+    for sex in ['f', 'm']:
+        all_results[sex] = {}
+        for year in (2,3):
+            common.SUBHEADING()
+            print 'sex = %s, year = %d' % (sex, year)
+            all_results[sex][year], keys = find_best_features(year, features, sex)
+            results = all_results[sex][year]
+            for j in sorted(results.keys()):
+                show_result(results, keys, j) 
     common.HEADING()    
-    for i in sorted(all_results.keys()):
-        print 'year = %d' % i
-        results = all_results[i]
-        for j in sorted(results.keys()):
-            show_result(results, keys, j)        
+    for sex in sorted(all_results.keys()):
+        for year in sorted(all_results[sex].keys()):
+            print 'sex = %s, year = %d' % (sex, year)
+            results = all_resultsall_results[sex][year]
+            for j in sorted(results.keys()):
+                show_result(results, keys, j)        
             
 if False:
     for year in (3,2):

@@ -151,7 +151,8 @@ Top Features
 * 6: 0.594 [1, 3, 12, 16, 23, 34] =>  0.619 [0, 13(11), 14(12), 28(26), 36(34), 46(44)] 
 *  3 (1= Myocardial infarction) is masked when age is included
 *   Older people have more more heart attacks
-*  32 (34 = Pregnancy) goes away as well
-*    How does age account for pregnancy?
 *  12 and 34 remain 'FXDISLC', 'PNEUM',
     
+Sex Split
+---------   
+Men only predicts more accurately than whole population.    

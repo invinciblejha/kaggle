@@ -140,6 +140,7 @@ def get_best_features(X, y):
  
 def get_most_predictive_feature_set(X, y):  
     common.SUBHEADING()
+    print 'get_most_predictive_feature_set(X=%s, y=%s)' % (X.shape, y.shape)
     X,y = resample_equal_y(X, y, 1.0)
     return get_best_features(X, y)
 
