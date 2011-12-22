@@ -391,7 +391,7 @@ if True:
     for sex in sorted(all_results.keys()):
         for year in sorted(all_results[sex].keys()):
             print 'sex = %s, year = %d' % (sex, year)
-            results = all_resultsall_results[sex][year]
+            results = all_results[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j)        
             

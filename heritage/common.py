@@ -17,6 +17,12 @@ def HEADING():
 
 def SUBHEADING():
     print  '-' * 80
+    
+def mk_dir(dir):
+    try:
+        os.mkdir(dir)
+    except:
+        pass    
 
 def summarize(title, a_list):
     """Print some summary statistics about a_list"""
@@ -109,12 +115,13 @@ MAP_FUNCTIONS = {
     }
 }
 
-def get_map_function(table, column):
-    if not table in MAP_FUNCTIONS.keys():
+def get_map_function(filename, column):
+    """Return map function for filename:column"""
+    if not filename in MAP_FUNCTIONS.keys():
         return DEFAULT_MAP_FUNCTION
-    if not column in MAP_FUNCTIONS[table].keys():
+    if not column in MAP_FUNCTIONS[filename].keys():
         return DEFAULT_MAP_FUNCTION
-    return MAP_FUNCTIONS[table][column]    
+    return MAP_FUNCTIONS[filename][column]    
     
 def get_dict_all(filename, xform, verbose = False):
     """Return csv file dict with MemberID as keys
