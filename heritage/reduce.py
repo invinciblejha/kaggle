@@ -185,7 +185,7 @@ def make_lab_counts_table(filename):
     for year in sorted(derived_dict.keys()):
         derived_filename = '%s_%s_%s' % (DERIVED_PREFIX, year, filename)
         data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
-        data_writer.writerow(['MemberID'] + column_keys)
+        data_writer.writerow(['MemberID', 'DSFS', 'LabCount'])
         for k in sorted(derived_dict[year].keys()):
             row = derived_dict[year][k]
             data_writer.writerow([k] + [str(v) for v in row])     

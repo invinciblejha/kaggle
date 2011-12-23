@@ -158,7 +158,7 @@ def combine_dicts(columns1, dict1, columns2, dict2):
        MemberID as keys
     """    
     combined_columns = columns1 + columns2
-    keys = set(dict1.keys()) &  set(dict2.keys())
+    keys = set(dict1.keys()) & set(dict2.keys())
     combined_dict = {}
     for k in keys:
         combined_dict[k] = dict1[k] + dict2[k]

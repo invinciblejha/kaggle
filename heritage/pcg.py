@@ -1,3 +1,5 @@
+
+
 from __future__ import division
 """
   Find which pcg keys correlate with {DIH==0|DIH!=0}
@@ -239,8 +241,7 @@ def show_dih_counts(year):
             Y = has_dih_keys
             classify(X, Y)
 
-
-def getXy_for_dict(year, pcg_keys, counts_dict):
+def getXy_for_dict(year, keys, counts_dict):
     """For specified year, return
         rows = patients
         columns
@@ -248,7 +249,7 @@ def getXy_for_dict(year, pcg_keys, counts_dict):
             y=days in hospital
     """
 
-    print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(pcg_keys))
+    print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(keys))
 
     dih_dict = get_dih(year)
 
@@ -289,7 +290,7 @@ def getXy_pcg(year):
    
     keys, counts_dict = get_pcg_counts_dict(year-1)
     X,y = getXy_for_dict(year, keys, counts_dict)
-    return X,y,keys
+    return X,y,keys[1:]
 
 def getXy_patient(year):
     """For specified year, return
@@ -303,12 +304,12 @@ def getXy_patient(year):
 
     keys, counts_dict = get_patient_dict()
     X,y = getXy_for_dict(year, keys, counts_dict)
-    return X,y,keys 
+    return X,y,keys[1:] 
 
 def getXy_all(year):    
     patient_keys, patient_dict = get_patient_dict()
     pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
-    keys, counts_dict = common.combine_dicts(patient_keys, patient_dict, pcg_keys, pcg_dict)  
+    keys, counts_dict = common.combine_dicts(patient_keys[1:], patient_dict, pcg_keys[1:], pcg_dict)  
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
     
@@ -345,7 +346,34 @@ def find_best_features(year, features, sex):
             X[:,i] = X[:,i]/stds[i]    
     
     return select_features.get_most_predictive_feature_set(X, y), keys  
+    
+def compare_sexes(year):
+    print 'compare_sexes(year=%d)' % year
+    X,y,keys = getXy_all(year)
+    print 'keys = %s' % ['%d:%s'%(i,k) for i,k in enumerate(keys)]
+    
+    # Get male or female population
+    sex_key = keys.index('Sex')
+    m = X[:,sex_key] < 0.5
+    f = X[:,sex_key] > 0.5
 
+    Xm = X[m,:].sum(axis=0)
+    Xf = X[f,:].sum(axis=0)
+    
+    common.SUBHEADING()
+    print 'year = %d' % year
+    print '%20s, %7s, %7s' % ('key', 'male', 'female')
+    for k in keys:
+        i = keys.index(k)
+        t = Xm[i] + Xf[i]
+        sgn = ''
+        if Xf[i]/t < 0.3:
+            sgn = '<'
+        if Xf[i]/t > 0.7:
+            sgn = '>'    
+        print '%20s, %7d, %7d %.2f %.2f %s' % (k, Xm[i], Xf[i], Xm[i]/t, Xf[i]/t, sgn) 
+    
+   
 def make_predictions(year):
     import predict
     PREDICTIVE_INDICES = [1, 3, 12, 23, 26, 27, 28, 34, 37, 40]
@@ -362,7 +390,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if True:
+if False:
     import random
      # Set random seed so that each run gives same results
     random.seed(333)
@@ -396,5 +424,9 @@ if True:
                 show_result(results, keys, j)        
             
 if False:
-    for year in (3,2):
+    for year in (2,3):
         make_predictions(year)            
+        
+if True:
+    for year in (2,3):
+        compare_sexes(year)
