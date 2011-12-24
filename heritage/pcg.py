@@ -324,9 +324,11 @@ def find_best_features(year, features, sex):
     elif features == 'all':
         X,y,keys = getXy_all(year)
     
+    print 'keys=%s' % keys
+
     if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
         # Get male or female population
-        sex_key = keys[1:].index('Sex')
+        sex_key = keys.index('Sex')
         if sex.lower()[0] == 'm':
             p = X[:,sex_key] < 0.5
         else:    
@@ -335,17 +337,30 @@ def find_best_features(year, features, sex):
         X = X[p,:]
         y = y[p]
 
-     # Normalize
+        
+    # Remove columns with low counts
+    LOW_COUNT_THRESHOLD = 100
+    Xtot = X.sum(axis=0)
+    significant = Xtot >= LOW_COUNT_THRESHOLD
+    # Remove sex too
+    significant[sex_key] = False
+    print 'Removing keys < %d: %s' % (LOW_COUNT_THRESHOLD,
+        [keys[i] for i in range(len(keys)) if not significant[i]])
+    print 'keys=%d X=%s => ' % (len(keys), X.shape),    
+    keys = [keys[i] for i in range(len(keys)) if significant[i]]
+    X = X[:,significant] 
+    print 'keys=%d X=%s' % (len(keys), X.shape) 
+    
+    # Normalize
     means = X.mean(axis=0)
     stds = X.std(axis=0)
 
     for i in range(X.shape[1]):
         X[:,i] = X[:,i] - means[i]
-        # Be careful not to increase variance of nearly constant variables
-        if abs(stds[i]) > 1e-1:
+        if abs(stds[i]) > 1e-6:
             X[:,i] = X[:,i]/stds[i]    
     
-    return select_features.get_most_predictive_feature_set(X, y), keys  
+    return select_features.get_most_predictive_feature_set(X, y, keys), keys  
     
 def compare_sexes(year):
     print 'compare_sexes(year=%d)' % year
@@ -380,7 +395,7 @@ def make_predictions(year):
     print 'make_predictions(year=%d)' % year
     X,y = getXy_pcg(year)
     X = X[:,PREDICTIVE_INDICES]
-    predict.predict(X,y)
+    predict.predict(X, y)
 
 if False:    
     show_totals_by_dih(2)            
@@ -390,7 +405,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if False:
+if True:
     import random
      # Set random seed so that each run gives same results
     random.seed(333)
@@ -402,7 +417,7 @@ if False:
     
     def show_result(results, keys, j):
         r = results[j]
-        decoded_genome = [keys[g+1] for g in r['genome']]
+        decoded_genome = [keys[g] for g in r['genome']]
         print '%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome)
         
     all_results = {}
@@ -427,6 +442,6 @@ if False:
     for year in (2,3):
         make_predictions(year)            
         
-if True:
+if False:
     for year in (2,3):
         compare_sexes(year)

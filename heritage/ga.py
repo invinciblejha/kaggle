@@ -199,7 +199,7 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
 
     def make_initial_genomes(genome_len, allowed_values, base_genomes):
         for i in range(len(allowed_values)):
-            print '%d,' % len(existing_genomes),
+            #print '%d,' % len(existing_genomes),
             if i+genome_len <= len(allowed_values):
                 genome = allowed_values[i:i+genome_len]
             else:
@@ -264,7 +264,7 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
         # Not sure if mutation helps at all
         add_genome(mutate(results[0]['genome'],allowed_values))
             
-        if cnt > 0 and cnt % 10 == 0:
+        if cnt > 0 and cnt % 100 == 0:
             print time.ctime(), 'Round %4d. Best = %s' % (cnt, result_to_str(results[0]))
             
         if has_converged(history_of_best):

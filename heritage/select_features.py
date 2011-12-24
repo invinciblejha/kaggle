@@ -83,31 +83,35 @@ def resample_equal_y(X, y, fac):
     y0 = y[y==0]
     y1 = y[y==1]
     
-    print 'X0 ', X0.shape
-    print 'y0 ', y0.shape
-    print 'X1 ', X1.shape
-    print 'y1 ', y1.shape
+    if False:
+        print 'X0 ', X0.shape
+        print 'y0 ', y0.shape
+        print 'X1 ', X1.shape
+        print 'y1 ', y1.shape
     
     # Downsample y[i]==0 on rows
     X0r, y0r = sklearn.utils.resample(X0, y0, n_samples=X1.shape[0])  
     
-    print 'X0r', X0r.shape
-    print 'y0r', y0r.shape
+    if False:
+        print 'X0r', X0r.shape
+        print 'y0r', y0r.shape
     
     Xr = np.r_[X0r, X1]
     yr = np.r_[y0r, y1]
     
-    print 'Xr ', Xr.shape
-    print 'yr ', yr.shape
-    
-    print 'Downsampling by a further factor of %f' % fac
-    Xr, yr = sklearn.utils.resample(Xr, yr, n_samples = int(Xr.shape[0] *fac))  
-    print 'Xr ', Xr.shape
-    print 'yr ', yr.shape
+    if False:
+        print 'Xr ', Xr.shape
+        print 'yr ', yr.shape
+        
+    if fac != 1.0:
+        print 'Downsampling by a further factor of %f' % fac
+        Xr, yr = sklearn.utils.resample(Xr, yr, n_samples = int(Xr.shape[0] * fac))  
+        print 'Xr ', Xr.shape
+        print 'yr ', yr.shape
 
     return Xr, yr
  
-def get_best_features(X, y):
+def get_best_features(X, y, keys):
 
     num_features = X.shape[1]
     
@@ -122,27 +126,28 @@ def get_best_features(X, y):
     all_results = {}
     best_genomes = None
     #for n in range(1, num_features+1):
-    for n in range(2, 14):
-    #for n in range(2, 5):
+    #for n in range(2, 14):
+    for n in range(2, 5):
         genome_len = n
-        #results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
-        results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)
+        results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
+        #results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)
         # results are sorted best to worst so this gets best results
         all_results[n] = results[0] 
         last_score = 0.0
         for k in sorted(all_results.keys()):
             score = all_results[k]['score']
             genome = all_results[k]['genome']
-            print '%6d: %.3f (%.4f) %s' % (k, score, score-last_score, genome)
+            decoded = [keys[g] for g in genome]
+            print '%6d: %.3f (%.4f) %s %s' % (k, score, score-last_score, genome, decoded)
             last_score = score
         best_genomes = [r['genome'] for r in results]    
     return all_results    
  
-def get_most_predictive_feature_set(X, y):  
+def get_most_predictive_feature_set(X, y, keys):  
     common.SUBHEADING()
-    print 'get_most_predictive_feature_set(X=%s, y=%s)' % (X.shape, y.shape)
+    print 'get_most_predictive_feature_set(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, keys)
     X,y = resample_equal_y(X, y, 1.0)
-    return get_best_features(X, y)
+    return get_best_features(X, y, keys)
 
 if __name__ == '__main__':
     test_cv()

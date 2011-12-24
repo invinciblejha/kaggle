@@ -157,62 +157,29 @@ Sex Split
 =========   
 Men only predicts more accurately than whole population.    
 
+
+================================================================================
 sex = f, year = 2
 -----------------
-     2: 0.567 [14, 36] ['FXDISLC', 'PNEUM']
-     3: 0.591 [0, 14, 36] ['AgeAtFirstClaim', 'FXDISLC', 'PNEUM']
-     4: 0.604 [0, 14, 26, 36] ['AgeAtFirstClaim', 'FXDISLC', 'METAB3', 'PNEUM']
-     5: 0.613 [0, 5, 14, 16, 36] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'PNEUM']
-     6: 0.617 [0, 5, 14, 16, 28, 36] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'MISCL1', 'PNEUM']
-     7: 0.619 [0, 2, 5, 14, 16, 28, 36] ['AgeAtFirstClaim', 'MemberID', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'MISCL1', 'PNEUM']
-     8: 0.621 [0, 5, 14, 16, 18, 36, 41, 42] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'GYNECA', 'PNEUM', 'RESPR4', 'ROAMI']
-     9: 0.623 [0, 5, 14, 16, 18, 28, 36, 38, 42] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'GYNECA', 'MISCL1', 'PNEUM', 'RENAL1', 'ROAMI']
-    10: 0.625 [0, 5, 14, 16, 20, 36, 38, 40, 41, 42] ['AgeAtFirstClaim', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'HEART4', 'PNEUM', 'RENAL1', 'RENAL3', 'RESPR4', 'ROAMI']
-    11: 0.625 [0, 3, 5, 14, 16, 18, 24, 36, 38, 41, 42] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'FXDISLC', 'GIOBSENT', 'GYNECA', 'LIVERDZ', 'PNEUM', 'RENAL1', 'RESPR4', 'ROAMI']
-    12: 0.626 [0, 5, 7, 9, 14, 16, 24, 36, 38, 40, 41, 42] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRA', 'CANCRM', 'FXDISLC', 'GIOBSENT', 'LIVERDZ', 'PNEUM', 'RENAL1', 'RENAL3', 'RESPR4', 'ROAMI']
-    13: 0.627 [0, 5, 9, 14, 15, 16, 24, 36, 38, 40, 41, 42, 45] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRM', 'FXDISLC', 'GIBLEED', 'GIOBSENT', 'LIVERDZ', 'PNEUM', 'RENAL1', 'RENAL3', 'RESPR4', 'ROAMI', 'SKNAUT']
+     2: 0.553 [0, 1] ['AgeAtFirstClaim', 'None']
+     3: 0.595 [0, 12, 32] ['AgeAtFirstClaim', 'GIOBSENT', 'RESPR4']
+     4: 0.605 [0, 4, 12, 32] ['AgeAtFirstClaim', 'ARTHSPIN', 'GIOBSENT', 'RESPR4']
 sex = f, year = 3
 -----------------
-     2: 0.553 [5, 25] ['APPCHOL', 'METAB1']
-     3: 0.597 [0, 5, 36] ['AgeAtFirstClaim', 'APPCHOL', 'PNEUM']
-     4: 0.608 [0, 5, 20, 36] ['AgeAtFirstClaim', 'APPCHOL', 'HEART4', 'PNEUM']
-     5: 0.612 [0, 3, 5, 20, 36] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'HEART4', 'PNEUM']
-     6: 0.614 [0, 3, 5, 20, 36, 39] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'HEART4', 'PNEUM', 'RENAL2']
-     7: 0.616 [0, 3, 5, 10, 20, 36, 39] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'HEART4', 'PNEUM', 'RENAL2']
-     8: 0.618 [0, 3, 5, 15, 20, 36, 39, 46] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'GIBLEED', 'HEART4', 'PNEUM', 'RENAL2', 'STROKE']
-     9: 0.619 [0, 3, 5, 10, 15, 20, 36, 39, 40] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'GIBLEED', 'HEART4', 'PNEUM', 'RENAL2', 'RENAL3']
-    10: 0.620 [0, 3, 5, 10, 15, 20, 22, 36, 39, 40] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'GIBLEED', 'HEART4', 'HIPFX', 'PNEUM','RENAL2', 'RENAL3']
-    11: 0.621 [0, 3, 5, 10, 15, 20, 32, 36, 39, 40, 46] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'GIBLEED', 'HEART4', 'ODaBNCA', 'PNEUM', 'RENAL2', 'RENAL3', 'STROKE']
-    12: 0.623 [0, 3, 5, 10, 15, 20, 31, 32, 36, 39, 40, 46] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'GIBLEED', 'HEART4', 'NEUMENT', 'ODaBNCA', 'PNEUM', 'RENAL2', 'RENAL3', 'STROKE']
-    13: 0.623 [0, 3, 5, 10, 15, 20, 31, 32, 36, 39, 40, 43, 46] ['AgeAtFirstClaim', 'None', 'APPCHOL', 'CATAST', 'GIBLEED', 'HEART4', 'NEUMENT', 'ODaBNCA', 'PNEUM', 'RENAL2', 'RENAL3', 'SEIZURE', 'STROKE']
+     2: 0.554 [8, 32] ['COPD', 'RESPR4']
+     3: 0.584 [4, 32, 36] ['ARTHSPIN', 'RESPR4', 'STROKE']
+     4: 0.597 [0, 4, 32, 36] ['AgeAtFirstClaim', 'ARTHSPIN', 'RESPR4', 'STROKE']
 sex = m, year = 2
 -----------------
-     2: 0.591 [0, 41] ['AgeAtFirstClaim', 'RESPR4']
-     3: 0.617 [0, 18, 41] ['AgeAtFirstClaim', 'GYNECA', 'RESPR4']
-     4: 0.618 [0, 10, 18, 41] ['AgeAtFirstClaim', 'CATAST', 'GYNECA', 'RESPR4']
-     5: 0.619 [0, 2, 10, 18, 41] ['AgeAtFirstClaim', 'MemberID', 'CATAST', 'GYNECA', 'RESPR4']
-     6: 0.625 [0, 10, 14, 30, 39, 41] ['AgeAtFirstClaim', 'CATAST', 'FXDISLC', 'MSC2a3', 'RENAL2', 'RESPR4']
-     7: 0.626 [0, 10, 14, 18, 30, 38, 39] ['AgeAtFirstClaim', 'CATAST', 'FXDISLC', 'GYNECA', 'MSC2a3', 'RENAL1', 'RENAL2']
-     8: 0.628 [0, 5, 10, 13, 14, 25, 30, 39] ['AgeAtFirstClaim', 'APPCHOL', 'CATAST', 'FLaELEC', 'FXDISLC', 'METAB1', 'MSC2a3', 'RENAL2']
-     9: 0.629 [0, 5, 10, 12, 13, 14, 25, 30, 39] ['AgeAtFirstClaim', 'APPCHOL', 'CATAST', 'COPD', 'FLaELEC', 'FXDISLC', 'METAB1', 'MSC2a3', RENAL2']
-    10: 0.629 [0, 5, 10, 12, 13, 14, 16, 25, 30, 39] ['AgeAtFirstClaim', 'APPCHOL', 'CATAST', 'COPD', 'FLaELEC', 'FXDISLC', 'GIOBSENT', 'METAB1', 'MSC2a3', 'RENAL2']
-    11: 0.630 [0, 5, 10, 12, 13, 14, 25, 30, 39, 43, 47] ['AgeAtFirstClaim', 'APPCHOL', 'CATAST', 'COPD', 'FLaELEC', 'FXDISLC', 'METAB1', 'MSC2a3', 'RENAL2', 'SEIZURE', 'TRAUMA']
-    12: 0.630 [0, 1, 5, 6, 10, 13, 14, 25, 30, 36, 39, 47] ['AgeAtFirstClaim', 'Sex', 'APPCHOL', 'ARTHSPIN', 'CATAST', 'FLaELEC', 'FXDISLC', 'METAB1', 'MSC2a3', 'PNEUM', 'RENAL2', 'TRAUMA']
-    13: 0.630 [0, 5, 6, 10, 12, 13, 14, 25, 30, 32, 36, 39, 47] ['AgeAtFirstClaim', 'APPCHOL', 'ARTHSPIN', 'CATAST', 'COPD', 'FLaELEC', 'FXDISLC', 'METAB1', 'MSC2a3', 'ODaBNCA', 'PNEUM', 'RENAL2', 'TRAUMA']
+     2: 0.589 [0, 1] ['AgeAtFirstClaim', 'None']
+     3: 0.607 [0, 11, 25] ['AgeAtFirstClaim', 'GIBLEED', 'NEUMENT']
+     4: 0.611 [0, 6, 11, 33] ['AgeAtFirstClaim', 'CANCRB', 'GIBLEED', 'ROAMI']
 sex = m, year = 3
 -----------------
-     2: 0.586 [47, 0] ['TRAUMA', 'AgeAtFirstClaim']
-     3: 0.616 [0, 5, 29] ['AgeAtFirstClaim', 'APPCHOL', 'MISCL5']
-     4: 0.617 [0, 5, 29, 45] ['AgeAtFirstClaim', 'APPCHOL', 'MISCL5', 'SKNAUT']
-     5: 0.618 [0, 4, 5, 29, 45] ['AgeAtFirstClaim', 'AMI', 'APPCHOL', 'MISCL5', 'SKNAUT']
-     6: 0.618 [0, 5, 10, 12, 29, 45] ['AgeAtFirstClaim', 'APPCHOL', 'CATAST', 'COPD', 'MISCL5', 'SKNAUT']
-     7: 0.619 [0, 5, 16, 29, 32, 42, 45] ['AgeAtFirstClaim', 'APPCHOL', 'GIOBSENT', 'MISCL5', 'ODaBNCA', 'ROAMI', 'SKNAUT']
-     8: 0.619 [0, 5, 16, 29, 32, 37, 42, 45] ['AgeAtFirstClaim', 'APPCHOL', 'GIOBSENT', 'MISCL5', 'ODaBNCA', 'PRGNCY', 'ROAMI', 'SKNAUT']
-     9: 0.619 [0, 1, 5, 16, 29, 32, 42, 43, 45] ['AgeAtFirstClaim', 'Sex', 'APPCHOL', 'GIOBSENT', 'MISCL5', 'ODaBNCA', 'ROAMI', 'SEIZURE', 'SKNAUT']
-    10: 0.619 [0, 5, 16, 29, 31, 32, 35, 37, 42, 45] ['AgeAtFirstClaim', 'APPCHOL', 'GIOBSENT', 'MISCL5', 'NEUMENT', 'ODaBNCA', 'PNCRDZ', 'PRGNCY', 'ROAMI', 'SKNAUT']
-    11: 0.620 [0, 5, 8, 16, 29, 31, 32, 36, 37, 42, 45] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRB', 'GIOBSENT', 'MISCL5', 'NEUMENT', 'ODaBNCA', 'PNEUM', 'PRGNCY', 'ROAMI', 'SKNAUT']
-    12: 0.619 [0, 5, 8, 9, 16, 17, 29, 32, 36, 42, 43, 45] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRB', 'CANCRM', 'GIOBSENT', 'GYNEC1', 'MISCL5', 'ODaBNCA', 'PNEUM', 'ROAMI', 'SEIZURE', 'SKNAUT']
-    13: 0.620 [0, 5, 8, 16, 17, 29, 31, 32, 36, 37, 42, 43, 45] ['AgeAtFirstClaim', 'APPCHOL', 'CANCRB', 'GIOBSENT', 'GYNEC1', 'MISCL5', 'NEUMENT', 'ODaBNCA', 'PNEUM', 'PRGNCY', 'ROAMI', 'SEIZURE', 'SKNAUT']
+     2: 0.580 [0, 6] ['AgeAtFirstClaim', 'CANCRB']
+     3: 0.613 [0, 2, 7] ['AgeAtFirstClaim', 'AMI', 'CHF']
+     4: 0.614 [0, 2, 7, 22] ['AgeAtFirstClaim', 'AMI', 'CHF', 'MISCL1']
+
 
 Totals by Sex
 =============
