@@ -415,26 +415,33 @@ if True:
     #features = 'pcg'
     features = 'all'
     
+  
     def show_result(results, keys, j):
         r = results[j]
+        for g in r['genome']:
+            if g < 0 or g >= len(keys):
+                print 'violation'
+                print 'keys= %d %s' % (len(keys), keys)
+                print 'genome = %s' % r['genome']
         decoded_genome = [keys[g] for g in r['genome']]
         print '%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome)
         
-    all_results = {}
+    # all_results_keys[sex][year] holds results,keys for sex,year
+    all_results_keys = {}
     for sex in ['f', 'm']:
-        all_results[sex] = {}
+        all_results_keys[sex] = {}
         for year in (2,3):
             common.SUBHEADING()
             print 'sex = %s, year = %d' % (sex, year)
-            all_results[sex][year], keys = find_best_features(year, features, sex)
-            results = all_results[sex][year]
+            all_results_keys[sex][year] = find_best_features(year, features, sex)
+            results, keys = all_results_keys[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j) 
     common.HEADING()    
-    for sex in sorted(all_results.keys()):
-        for year in sorted(all_results[sex].keys()):
+    for sex in sorted(all_results_keys.keys()):
+        for year in sorted(all_results_keys[sex].keys()):
             print 'sex = %s, year = %d' % (sex, year)
-            results = all_results[sex][year]
+            results, keys = all_results_keys[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j)        
             

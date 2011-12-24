@@ -32,7 +32,7 @@ import common
 # Probability of selection = WEIGHT_RATIO^rank. Thus lower WEIGHT_RATIO selects more genomes with 
 #  higher anking scores 
 BEST_WEIGHT_RATIO = 0.95
-WEIGHT_RATIOS = [0.99, 0.98, BEST_WEIGHT_RATIO, 0.90, 0.85, 0.80] 
+WEIGHT_RATIOS = [0.99, 0.98, 0.97, BEST_WEIGHT_RATIO, 0.90, 0.85, 0.80] 
 # Number of rounds to wait for convergence
 NUM_ROUNDS = 1000
 # Number of genomes
@@ -208,7 +208,7 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             add_genome(genome)
             
         for i in range(POPULATION_SIZE * 2):
-            print '%d,' % len(existing_genomes),
+            #print '%d,' % len(existing_genomes),
             if len(existing_genomes) >= POPULATION_SIZE:
                 break
             if base_genomes:
@@ -221,7 +221,7 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             else:
                 add_genome(make_random_genome(genome_len, allowed_values))
         
-        print
+        #print
                 
     def get_new_genomes(): 
         """Spin roulette wheel repeatedly in search of a new binary vector"""
@@ -250,9 +250,14 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
                 return False
         return True
 
-    print time.ctime(), 'About to make_initial_genomes'
+    if genome_len == 1:
+        for v in allowed_values:
+            add_genome([v])
+        return results
+        
+    #print time.ctime(), 'About to make_initial_genomes'
     make_initial_genomes(genome_len, allowed_values, base_genomes)
-    print time.ctime(), 'Done make_initial_genomes: %d genomes' %  len(existing_genomes)
+    #print time.ctime(), 'Done make_initial_genomes: %d genomes' %  len(existing_genomes)
     for cnt in range(NUM_ROUNDS):
         g1,g2 = get_new_genomes()
         if not (g1 or g2):
@@ -271,9 +276,9 @@ def _run_ga(eval_func, genome_len, allowed_values, base_genomes = None):
             print time.ctime(), '2. Converged after %d GA rounds. Top %d genomes have same score' % (cnt, CONVERGENCE_NUMBER)
             break
 
-    for r in results[:5]:
-        print '   ', result_to_str(r)
-        
+    #for r in results[:5]:
+    #    print '   ', result_to_str(r)
+
     return results[:POPULATION_SIZE]
 
 def run_ga(eval_func, genome_len, allowed_values, base_genomes = None):  
