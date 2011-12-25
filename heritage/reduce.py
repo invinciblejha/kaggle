@@ -12,12 +12,11 @@ import csv
 import pickle
 import common
 
-DATA_DIRECTORY = 'data2'
+DATA_DIRECTORY = 'data'
 common.mk_dir(DATA_DIRECTORY)
 
 DERIVED_PREFIX = os.path.join(DATA_DIRECTORY, 'derived_')
 
-    
 def make_group_name(group):
     return os.path.join('CACHE', 'group%04d.pkl' % group)    
 
@@ -155,18 +154,23 @@ def make_pcg_counts_table(filename):
 
     process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys) 
     
-def make_lab_counts_table(filename):
-    print 'make_lab_counts_table(filename=%s)' % filename
+def make_lab_counts_table(filename, title):
+    """ Used for LabCount.csv and DrugCount.csv which have similar formats""
+    print 'make_lab_counts_table(filename=%s, title=%s)' % (filename, title)
     
     derived_dict = {'Y1':{}, 'Y2':{}, 'Y3':{}}
     column_keys, get_data = common.get_csv(filename)
     year_column = column_keys[1:].index('Year')
     dsfs_column = column_keys[1:].index('DSFS')
-    labcount_column = column_keys[1:].index('LabCount')
+    labcount_column = column_keys[1:].index(title)
     print 'year_column=%d' % year_column
     print 'dsfs_column=%d' % dsfs_column
     print 'labcount_column=%d' % labcount_column
-    
+
+    if labcount_column < 0:
+        print 'title not matched'
+        exit()
+  
     dsfs_func = common.get_int_part
     labcount_func = common.get_int_part
     
@@ -185,7 +189,7 @@ def make_lab_counts_table(filename):
     for year in sorted(derived_dict.keys()):
         derived_filename = '%s_%s_%s' % (DERIVED_PREFIX, year, filename)
         data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
-        data_writer.writerow(['MemberID', 'DSFS', 'LabCount'])
+        data_writer.writerow(['MemberID', '%_DSFS' % title, title])
         for k in sorted(derived_dict[year].keys()):
             row = derived_dict[year][k]
             data_writer.writerow([k] + [str(v) for v in row])     
@@ -205,6 +209,7 @@ if __name__ == '__main__':
     
     if 'claims' in filename.lower():
         make_pcg_counts_table(filename)
-    elif 'labcount' in filename.lower():
-        make_lab_counts_table(filename)    
+    elif 'labcount' in filename.lower() or 'drugcount' in filename.lower():
+        title = os.path.splitext(os.path.basename(filename))[0]
+        make_lab_counts_table(filename, title)    
         
