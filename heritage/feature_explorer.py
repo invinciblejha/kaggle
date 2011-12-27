@@ -25,8 +25,25 @@ def get_labcount_filename(year):
 def get_drugcount_filename(year):
     return r'data\derived_Y%d_DrugCount.csv' % year
  
+def get_counts_filename(prefix, year):
+    return r'data\derived_%s_Y%d_Claims.csv' % (prefix, year)
+
+COUNTS_PREFIXES = ['charlson', 'proc_group', 'specialty', 'place_svc', 'pcg']
+    
 def get_pcg_filename(year):
-    return r'data\derived_all_counts_Y%d_Claims.csv' % year
+    return get_counts_filename('pcg', year)
+
+def get_procedure_filename(year):
+    return get_counts_filename('proc_group', year)
+    
+def get_specialty_filename(year):
+    return get_counts_filename('specialty', year)
+    
+def get_place_filename(year):
+    return get_counts_filename('place_svc', year)
+
+def get_charlson_filename(year):
+    return get_counts_filename('charlson', year)    
     
 def get_dih(year):
     """Return "days in hospital" spreadsheet for specified year 
@@ -34,6 +51,9 @@ def get_dih(year):
     """
     return common.get_dict(get_dih_filename(year), 'DaysInHospital', int)
 
+def get_counts_dict(prefix, year):
+    return common.get_dict_all(get_counts_filename(prefix, year), int) 
+    
 def get_pcg_counts_dict(year):
     """Return dict whose keys are MemberIDs and values are PCG counts for all the PCG 
         categories
@@ -349,9 +369,15 @@ def getXy_all_all(year):
     keys, counts_dict = common.combine_dicts(keys, counts_dict, lab_keys[1:], lab_dict, use_dict1 = True)
     print '+lab_dict = %d' % len(counts_dict)
     
-    pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
-    keys, counts_dict = common.combine_dicts(keys, counts_dict, pcg_keys[1:], pcg_dict)
-    print '+pcg_dict = %d' % len(counts_dict)    
+    if False:
+        pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
+        keys, counts_dict = common.combine_dicts(keys, counts_dict, pcg_keys[1:], pcg_dict)
+        print '+pcg_dict = %d' % len(counts_dict)    
+    
+    for prefix in COUNTS_PREFIXES:
+        pre_keys, pre_dict = get_counts_dict(prefix, year-1)
+        keys, counts_dict = common.combine_dicts(keys, counts_dict, pre_keys[1:], pre_dict)
+        print '+%s_dict = %d' % (prefix, len(counts_dict)) 
     
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys

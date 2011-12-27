@@ -20,6 +20,8 @@ DERIVED_PREFIX = os.path.join(DATA_DIRECTORY, 'derived_')
 _serial_number = 0
 
 def update_serial_number():
+    common.mk_dir('CACHE')
+    
     global _serial_number
     n = _serial_number
     SERIAL_NUMBER_FILE = os.path.join('CACHE', 'serial.number')
@@ -215,9 +217,7 @@ def get_key_index(key_lut, key):
 def make_primary_condition_group_counts_table(filename):
     """Make the primary condition group table
         PrimaryConditionGroup
-
     """
-    
     prefix = 'pcg'
     derived_column_keys = ['None'] + sorted(PCG_LUT.keys(), key = lambda x: PCG_LUT[x])
     
