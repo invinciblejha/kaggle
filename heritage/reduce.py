@@ -17,8 +17,25 @@ common.mk_dir(DATA_DIRECTORY)
 
 DERIVED_PREFIX = os.path.join(DATA_DIRECTORY, 'derived_')
 
+_serial_number = 0
+
+def update_serial_number():
+    global _serial_number
+    n = _serial_number
+    SERIAL_NUMBER_FILE = os.path.join('CACHE', 'serial.number')
+    if os.path.exists(SERIAL_NUMBER_FILE):
+        s = file(SERIAL_NUMBER_FILE, 'rt').read()
+        print '%s contains "%s"' % (SERIAL_NUMBER_FILE, s)
+        n = int(s)
+        print 'int=%d' % n
+    _serial_number = n + 1
+    file(SERIAL_NUMBER_FILE, 'wt').write(str(_serial_number))
+    print '_serial_number = %d' % _serial_number
+
+update_serial_number() 
+
 def make_group_name(group):
-    return os.path.join('CACHE', 'group%04d.pkl' % group)
+    return os.path.join('CACHE', 'run%05d_group%04d.pkl' % (_serial_number, group))
     
 def get_all_values(filename, column, max_num_values = 100):
     """Return all values of column named columny in file named filename
@@ -52,7 +69,7 @@ def get_all_values(filename, column, max_num_values = 100):
         
     return sorted(values)
 
-def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_KEYS, NUM_GROUPS = 100):
+def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_KEYS, NUM_GROUPS = 50):
     """This has got complicated due to python running slowing with large dicts
         Passes through input file multiple times and writes partial results to 
         disk (see group).
@@ -62,15 +79,18 @@ def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_
         
         50 may be a better default for NUM_GROUPS (see make_charlson_table())
     """
+
+    print 'process_multi_pass(filename=%s,prefix=%s,DERIVED_COLUMN_KEYS=%s,NUM_GROUPS=%d)' % (filename, 
+            prefix, DERIVED_COLUMN_KEYS, NUM_GROUPS)
     
-    assert(prefix, 'Need a prefix to avoid over-writing existing files')
+    assert(prefix), 'Need a prefix to avoid over-writing existing files'
     column_keys, get_data = common.get_csv(filename)
 
     year_column = column_keys[1:].index('Year')
-       
+
     t0 = time.clock()
     num_rows = 0
-    
+
     for group in range(NUM_GROUPS):
         derived_dict = {'ALL':{}, 'Y1':{}, 'Y2':{}, 'Y3':{}}
         print 'group=%d of %d' % (group, NUM_GROUPS)
@@ -79,7 +99,7 @@ def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_
             if (int(k) % NUM_GROUPS) != group:
                 continue
             year = v[year_column]
-                         
+
             if num_rows and num_rows % 10000 == 0:
                 t = time.clock() - t0
                 eta  = int(t * (2668990 - num_rows)/num_rows)
@@ -101,7 +121,7 @@ def process_multi_pass(filename, init_func, update_func, prefix, DERIVED_COLUMN_
     print 'Writing to file'
     for year in sorted(derived_dict.keys()):
         rows_per_year = 0
-        derived_filename = '%s%s%s_%s' % (DERIVED_PREFIX, prefix, year, os.path.basename(filename))
+        derived_filename = '%s%s_%s_%s' % (DERIVED_PREFIX, prefix, year, os.path.basename(filename))
         print 'year=%4s: file=%s' % (year, derived_filename)
         data_writer = csv.writer(open(derived_filename , 'wb'), delimiter=',', quotechar='"')
         data_writer.writerow(['MemberID'] + DERIVED_COLUMN_KEYS)
@@ -174,10 +194,31 @@ def get_pcg_index(pcg):
         return PCG_LUT[pcg]
     assert(not pcg)
     return 0 
+    
+def make_key_lut(key_list):
+    """Make a look-up table for indexes into key_list
+        key_lut[k] = key_list.index(k) + 1
+        By convention  key_lut[''] = 0 
+    """    
+    key_lut = {}
+    for i,k in enumerate(key_list):
+        key_lut[k] = i+1
+    return key_lut
+    
+def get_key_index(key_lut, key):
+    """Return index of key in key_list from which key_lut is constructed. See make_key_lut"""
+    if key in key_lut.keys():
+        return key_lut[key]
+    assert(not key)
+    return 0  
 
-def make_pcg_counts_table(filename):
+def make_primary_condition_group_counts_table(filename):
+    """Make the primary condition group table
+        PrimaryConditionGroup
 
-    prefix = 'all_counts'
+    """
+    
+    prefix = 'pcg'
     derived_column_keys = ['None'] + sorted(PCG_LUT.keys(), key = lambda x: PCG_LUT[x])
     
     column_keys, _ = common.get_csv(filename)
@@ -191,6 +232,74 @@ def make_pcg_counts_table(filename):
 
     process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys) 
 
+def make_procedure_group_counts_table(filename):
+    """
+        ProcedureGroup ['', 'ANES', 'EM', 'MED', 'PL', 'RAD', 'SAS', 'SCS', 'SDS', 'SEOA', 'SGS', 
+                'SIS', 'SMCD', 'SMS', 'SNS', 'SO', 'SRS', 'SUS']
+    """
+    PROCEDURE_GROUP_KEYS =  ['ANES', 'EM', 'MED', 'PL', 'RAD', 'SAS', 'SCS', 'SDS', 'SEOA', 'SGS', 
+                'SIS', 'SMCD', 'SMS', 'SNS', 'SO', 'SRS', 'SUS']
+    prefix = 'proc_group'
+    derived_column_keys = ['None'] + sorted(PROCEDURE_GROUP_KEYS)
+    key_lut = make_key_lut(PROCEDURE_GROUP_KEYS)
+    
+    column_keys, _ = common.get_csv(filename)
+    column = column_keys[1:].index('ProcedureGroup')
+
+    def init_func():
+        return [0 for i in range(len(derived_column_keys))]
+
+    def update_func(derived_list, input_row):
+        derived_list[get_key_index(key_lut, input_row[column])] += 1
+
+    process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys)
+ 
+def make_specialty_counts_table(filename):
+    """
+        Specialty  ['', 'Anesthesiology', 'Diagnostic Imaging', 'Emergency', 'General Practice', 
+                    'Internal', 'Laboratory', 'Obstetrics and Gynecology', 'Other', 'Pathology', 
+                    'Pediatrics',  'Rehabilitation', 'Surgery']
+    """
+    SPECIALTY_KEYS = ['Anesthesiology', 'Diagnostic Imaging', 'Emergency', 'General Practice', 
+                    'Internal', 'Laboratory', 'Obstetrics and Gynecology', 'Other', 'Pathology', 
+                    'Pediatrics',  'Rehabilitation', 'Surgery']
+    prefix = 'specialty'
+    derived_column_keys = ['None'] + sorted(SPECIALTY_KEYS)
+    key_lut = make_key_lut(SPECIALTY_KEYS)
+    
+    column_keys, _ = common.get_csv(filename)
+    column = column_keys[1:].index('Specialty')
+
+    def init_func():
+        return [0 for i in range(len(derived_column_keys))]
+
+    def update_func(derived_list, input_row):
+        derived_list[get_key_index(key_lut, input_row[column])] += 1
+
+    process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys)
+
+def make_place_service_counts_table(filename):
+    """
+        PlaceSvc   ['', 'Ambulance', 'Home', 'Independent Lab', 'Inpatient Hospital', 'Office', 
+                        'Other', 'Outpatient Hospital', 'Urgent Care']
+    """
+    PLACE_SVC_KEYS =  ['Ambulance', 'Home', 'Independent Lab', 'Inpatient Hospital', 'Office', 
+                        'Other', 'Outpatient Hospital', 'Urgent Care']
+    prefix = 'place_svc'
+    derived_column_keys = ['None'] + sorted(PLACE_SVC_KEYS)
+    key_lut = make_key_lut(PLACE_SVC_KEYS)
+    
+    column_keys, _ = common.get_csv(filename)
+    column = column_keys[1:].index('PlaceSvc')
+
+    def init_func():
+        return [0 for i in range(len(derived_column_keys))]
+
+    def update_func(derived_list, input_row):
+        derived_list[get_key_index(key_lut, input_row[column])] += 1
+
+    process_multi_pass(filename, init_func, update_func, prefix, derived_column_keys)    
+    
 def make_charlson_table(filename):
     """CharlsonIndex  ['0', '1-2', '3-4', '5+']
         Use highest Charlson index for any claim for patient in period. Not sure if this is the
@@ -214,7 +323,7 @@ def make_charlson_table(filename):
         derived_list[0] = max(derived_list[0], charlson_func(input_row[charlson_column]))
 
     # NUM_GROUPS = 50 if 1.6x faster than 100 which is much faster than 10 for Claims.csv
-    process_multi_pass(filename, init_func, update_func, '', ['CharlsonIndex'], NUM_GROUPS = 50) 
+    process_multi_pass(filename, init_func, update_func, prefix, ['CharlsonIndex'], NUM_GROUPS = 50) 
     
     if False:
         year_column = column_keys[1:].index('Year') 
@@ -294,6 +403,10 @@ if __name__ == '__main__':
     parser = optparse.OptionParser('python ' + sys.argv[0] + ' options <file name> [<column name>]')
     parser.add_option('-v', '--show-values', action="store_true", dest='show_values', default=False, help='show values of filename column')
     parser.add_option('-c', '--charlson-table', action="store_true", dest='charlson_table', default=False, help='make CharlsonIndex table')
+    parser.add_option('-p', '--procedure-group', action="store_true", dest='procedure_group', default=False, help='make procedure_group counts table')
+    parser.add_option('-s', '--specialty', action="store_true", dest='specialty', default=False, help='make specialty counts table')
+    parser.add_option('-o', '--place-of-service', action="store_true", dest='place_service', default=False, help='make place of service counts table')
+    parser.add_option('-g', '--primary-condition-group', action="store_true", dest='primary_condition_group', default=False, help='make primary condition group counts table')
   
     (options, args) =  parser.parse_args()
     
@@ -314,12 +427,27 @@ if __name__ == '__main__':
     if options.charlson_table:
         make_charlson_table(filename)  
         exit()
-
-    if 'claims' in filename.lower():
-        make_pcg_counts_table(filename)
-    elif 'labcount' in filename.lower() or 'drugcount' in filename.lower():
-        title = os.path.splitext(os.path.basename(filename))[0]
-        make_lab_counts_table(filename, title)    
+    
+    if options.procedure_group:    
+        make_procedure_group_counts_table(filename)
+        exit()
         
-    get_all_values(filename, column, max_num_values = 100)    
+    if options.specialty:    
+        make_specialty_counts_table(filename)
+        exit()    
+    
+    if options.place_service:    
+        make_place_service_counts_table(filename)
+        exit()     
+        
+    if options.primary_condition_group: 
+        make_primary_condition_group_counts_table(filename)
+        exit() 
+
+    if 'labcount' in filename.lower() or 'drugcount' in filename.lower():
+        title = os.path.splitext(os.path.basename(filename))[0]
+        make_lab_counts_table(filename, title) 
+        exit()    
+       
+  
         
