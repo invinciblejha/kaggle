@@ -376,18 +376,19 @@ def getXy_all_all(year):
     
     for prefix in COUNTS_PREFIXES:
         pre_keys, pre_dict = get_counts_dict(prefix, year-1)
+        pre_keys = ['%s=%s' % (prefix, k) for k in pre_keys]
         keys, counts_dict = common.combine_dicts(keys, counts_dict, pre_keys[1:], pre_dict)
         print '+%s_dict = %d' % (prefix, len(counts_dict)) 
     
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
     
+    
 # Remove columns with counts below this threshold
 LOW_COUNT_THRESHOLD = 100   
 
-def find_best_features(year, features, sex, heavy):
-    import select_features
-    print 'find_best_features(year=%d)' % year
+def getXy_by_features(year, features, sex):
+    print 'getXy_by_features(year=%d,features=%s,sex=%s)' % (year, features, sex)
     if features == 'pcg':
         X,y,keys = getXy_pcg(year)
     elif features == 'patient':
@@ -432,8 +433,13 @@ def find_best_features(year, features, sex, heavy):
         if abs(stds[i]) > 1e-6:
             X[:,i] = X[:,i]/stds[i]    
     
+    return X, y, keys  
+
+def find_best_features(year, features, sex, heavy):
+    print 'find_best_features(year=%d,features=%s,sex=%s,heavy=%s)' % (year, features, sex, heavy)
+    X, y, keys = getXy_by_features(year, features, sex)
     return select_features.get_most_predictive_feature_set(X, y, keys, heavy), keys  
-    
+
 def compare_sexes(year):
     print 'compare_sexes(year=%d)' % year
     X,y,keys = getXy_all(year)
@@ -459,15 +465,15 @@ def compare_sexes(year):
         if Xf[i]/t > 0.7:
             sgn = '>'    
         print '%20s, %7d, %7d %.2f %.2f %s' % (k, Xm[i], Xf[i], Xm[i]/t, Xf[i]/t, sgn) 
-    
-   
-def make_predictions(year):
+
+def make_predictions(year, features, sex):
     import predict
-    PREDICTIVE_INDICES = [1, 3, 12, 23, 26, 27, 28, 34, 37, 40]
+    PREDICTIVE_INDICES = [0, 25, 43, 65]
     print 'make_predictions(year=%d)' % year
-    X,y = getXy_pcg(year)
+    X, y, keys = getXy_by_features(year, features, sex)
     X = X[:,PREDICTIVE_INDICES]
-    predict.predict(X, y)
+    keys = [keys[i] for i in PREDICTIVE_INDICES]
+    predict.classify(X, y, keys)
 
 if False:    
     show_totals_by_dih(2)            
@@ -477,8 +483,10 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if True:
+if False:
+    import os
     import random
+    import ga
      # Set random seed so that each run gives same results
     random.seed(333)
     np.random.seed(333)
@@ -489,6 +497,16 @@ if True:
     features = 'all2'
     heavy = True
     
+    logname = os.path.join('results','features=%s.heavy=%s.pop=%d.results' % (features, 
+        heavy, ga.POPULATION_SIZE))
+    logfile = open(logname, 'wt')
+    print 'logname=%s' % logname
+       
+    def P(s):
+        """Print string s"""
+        print s
+        logfile.write(s + '\n')
+    
     def show_result(results, keys, j):
         r = results[j]
         for g in r['genome']:
@@ -497,7 +515,7 @@ if True:
                 print 'keys= %d %s' % (len(keys), keys)
                 print 'genome = %s' % r['genome']
         decoded_genome = [keys[g] for g in r['genome']]
-        print '%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome)
+        P('%6d: %.3f %s %s' % (j, r['score'], r['genome'], decoded_genome))
         
     # all_results_keys[sex][year] holds results,keys for sex,year
     all_results_keys = {}
@@ -505,22 +523,27 @@ if True:
         all_results_keys[sex] = {}
         for year in (2,3):
             common.SUBHEADING()
-            print 'sex = %s, year = %d' % (sex, year)
+            P('sex = %s, year = %d' % (sex, year))
             all_results_keys[sex][year] = find_best_features(year, features, sex, heavy)
             results, keys = all_results_keys[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j) 
+    
     common.HEADING()    
+    P('=' * 80)
+    
     for sex in sorted(all_results_keys.keys()):
         for year in sorted(all_results_keys[sex].keys()):
-            print 'sex = %s, year = %d' % (sex, year)
+            P('sex = %s, year = %d' % (sex, year))
             results, keys = all_results_keys[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j)        
             
-if False:
-    for year in (2,3):
-        make_predictions(year)            
+if True:
+    features = 'all2'
+    for sex in ['f', 'm']:
+        for year in (2,3):
+            make_predictions(year, features, sex)
         
 if False:
     for year in (2,3):

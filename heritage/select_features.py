@@ -77,13 +77,15 @@ def resample_equal_y(X, y, fac):
             y[i]==1 is less common than y[i]==0
             there are many y[i]==1 samples (=> downsampling is ok)
     """
-       
+    from sklearn.utils import shuffle
+    verbose = True
+    
     X0 = X[y==0,:]
     X1 = X[y==1,:]
     y0 = y[y==0]
     y1 = y[y==1]
     
-    if False:
+    if verbose:
         print 'X0 ', X0.shape
         print 'y0 ', y0.shape
         print 'X1 ', X1.shape
@@ -92,14 +94,14 @@ def resample_equal_y(X, y, fac):
     # Downsample y[i]==0 on rows
     X0r, y0r = sklearn.utils.resample(X0, y0, n_samples=X1.shape[0])  
     
-    if False:
+    if verbose:
         print 'X0r', X0r.shape
         print 'y0r', y0r.shape
     
     Xr = np.r_[X0r, X1]
     yr = np.r_[y0r, y1]
     
-    if False:
+    if verbose:
         print 'Xr ', Xr.shape
         print 'yr ', yr.shape
         
@@ -109,6 +111,8 @@ def resample_equal_y(X, y, fac):
         print 'Xr ', Xr.shape
         print 'yr ', yr.shape
 
+    # Give them a shuffle    
+    Xr, yr= shuffle(Xr, yr)    
     return Xr, yr
  
 def get_best_features(X, y, keys, heavy):
