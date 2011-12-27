@@ -298,7 +298,7 @@ def run_ga2(eval_func, genome_len, allowed_values, num_passes, base_genomes = No
     for i in range(num_passes):
         set_weight_ratio(WEIGHT_RATIOS[i % len(WEIGHT_RATIOS)])
         print 'pass %d: weight=%.2f' % (i, _weight_ratio)
-        results = run_ga(eval_func, genome_len, allowed_values, base_genomes)
+        results = _run_ga(eval_func, genome_len, allowed_values, base_genomes)
         base_genomes = [r['genome'] for r in results]
         if not best_results or results[0]['score'] > best_results[0]['score']:    
             best_results = results

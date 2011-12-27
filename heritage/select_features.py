@@ -111,8 +111,9 @@ def resample_equal_y(X, y, fac):
 
     return Xr, yr
  
-def get_best_features(X, y, keys):
-
+def get_best_features(X, y, keys, heavy):
+    
+    print 'get_best_features(X=%s, y=%s, keys=%s, heavy=%s)' % (X.shape, y.shape, len(keys), heavy)
     num_features = X.shape[1]
     
     def eval_func(chromosome):
@@ -125,12 +126,15 @@ def get_best_features(X, y, keys):
     allowed_values = range(num_features)
     all_results = {}
     best_genomes = None
-    for n in range(1, num_features+1):
-    #for n in range(1, 14):
+    #for n in range(1, num_features+1):
+    for n in range(1, 14):
     #for n in range(1, 3):
         genome_len = n
-        results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
-        results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)
+        if heavy:
+            results = GAX.run_ga2(eval_func, genome_len, allowed_values, 5, best_genomes)
+        else:    
+            results = GAX.run_ga(eval_func, genome_len, allowed_values, best_genomes)
+        
         # results are sorted best to worst so this gets best results
         all_results[n] = results[0] 
         last_score = 0.0
@@ -143,11 +147,11 @@ def get_best_features(X, y, keys):
         best_genomes = [r['genome'] for r in results]    
     return all_results    
  
-def get_most_predictive_feature_set(X, y, keys):  
+def get_most_predictive_feature_set(X, y, keys, heavy):  
     common.SUBHEADING()
     print 'get_most_predictive_feature_set(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, keys)
     X,y = resample_equal_y(X, y, 1.0)
-    return get_best_features(X, y, keys)
+    return get_best_features(X, y, keys, heavy)
 
 if __name__ == '__main__':
     test_cv()

@@ -18,7 +18,13 @@ def get_dih_filename(year):
 
 def get_patient_filename():
     return r'Members.csv'
-    
+
+def get_labcount_filename(year):
+    return r'data\derived_Y%d_LabCount.csv' % year
+
+def get_drugcount_filename(year):
+    return r'data\derived_Y%d_DrugCount.csv' % year
+ 
 def get_pcg_filename(year):
     return r'data\derived_all_counts_Y%d_Claims.csv' % year
     
@@ -28,18 +34,29 @@ def get_dih(year):
     """
     return common.get_dict(get_dih_filename(year), 'DaysInHospital', int)
 
-    
 def get_pcg_counts_dict(year):
     """Return dict whose keys are MemberIDs and values are PCG counts for all the PCG 
         categories
     """
     return common.get_dict_all(get_pcg_filename(year), int) 
-    
+
 def get_patient_dict():
     """Return dict whose keys are MemberIDs and patient sex and age 
         categories
     """
     return common.get_dict_all(get_patient_filename(), None)     
+
+def get_labcount_dict(year):
+    """Return dict whose keys are MemberIDs and LabCount DSFS and count 
+        categories
+    """
+    return common.get_dict_all(get_labcount_filename(year), int)     
+ 
+def get_drugcount_dict(year):
+    """Return dict whose keys are MemberIDs and DrugCount DSFS and count 
+        categories
+    """
+    return common.get_dict_all(get_drugcount_filename(year), int)     
 
 def get_total_pcg_filename(year):
     return r'data\pcg_totals_Y%d_Claims.csv' % year    
@@ -94,6 +111,7 @@ if False:
     TOP_PCG_KEYS = [s.strip() for s in TOP_PCG_KEYS_TEXT.split('\t')]
     print TOP_PCG_KEYS
     exit()
+
 TOP_PCG_KEYS = ['RENAL2', 'HIPFX', 'CHF', 'AMI', 'RENAL1', 'FLaELEC', 'PRGNCY', 'HEMTOL', 'ROAMI', 
     'SEPSIS', 'PNCRDZ', 'STROKE', 'HEART2', 'CANCRA']
 
@@ -312,11 +330,36 @@ def getXy_all(year):
     keys, counts_dict = common.combine_dicts(patient_keys[1:], patient_dict, pcg_keys[1:], pcg_dict)  
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
+
+def getXy_all_all(year):    
+    """ Should be treating no LabCount and no Drugcount as separate categories
+        
+    """
+    print 'getXy_all_all(year=%d)' % year
+    
+    patient_keys, patient_dict = get_patient_dict()
+    keys, counts_dict =  patient_keys[1:], patient_dict
+    print 'patient_dict = %d' % len(counts_dict)
+    
+    drug_keys, drug_dict = get_drugcount_dict(year-1)
+    keys, counts_dict = common.combine_dicts(keys, counts_dict, drug_keys[1:], drug_dict, use_dict1 = True)
+    print '+drug_dict = %d' % len(counts_dict)
+    
+    lab_keys, lab_dict = get_labcount_dict(year-1)
+    keys, counts_dict = common.combine_dicts(keys, counts_dict, lab_keys[1:], lab_dict, use_dict1 = True)
+    print '+lab_dict = %d' % len(counts_dict)
+    
+    pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
+    keys, counts_dict = common.combine_dicts(keys, counts_dict, pcg_keys[1:], pcg_dict)
+    print '+pcg_dict = %d' % len(counts_dict)    
+    
+    X,y = getXy_for_dict(year, keys, counts_dict)
+    return X,y,keys
     
 # Remove columns with counts below this threshold
 LOW_COUNT_THRESHOLD = 100   
 
-def find_best_features(year, features, sex):
+def find_best_features(year, features, sex, heavy):
     import select_features
     print 'find_best_features(year=%d)' % year
     if features == 'pcg':
@@ -326,6 +369,8 @@ def find_best_features(year, features, sex):
                
     elif features == 'all':
         X,y,keys = getXy_all(year)
+    elif features == 'all2':
+        X,y,keys = getXy_all_all(year)    
     
     print 'keys=%s' % keys
 
@@ -361,7 +406,7 @@ def find_best_features(year, features, sex):
         if abs(stds[i]) > 1e-6:
             X[:,i] = X[:,i]/stds[i]    
     
-    return select_features.get_most_predictive_feature_set(X, y, keys), keys  
+    return select_features.get_most_predictive_feature_set(X, y, keys, heavy), keys  
     
 def compare_sexes(year):
     print 'compare_sexes(year=%d)' % year
@@ -414,9 +459,10 @@ if True:
     
     #features = 'patient'
     #features = 'pcg'
-    features = 'all'
+    #features = 'all'
+    features = 'all2'
+    heavy = True
     
-  
     def show_result(results, keys, j):
         r = results[j]
         for g in r['genome']:
@@ -434,7 +480,7 @@ if True:
         for year in (2,3):
             common.SUBHEADING()
             print 'sex = %s, year = %d' % (sex, year)
-            all_results_keys[sex][year] = find_best_features(year, features, sex)
+            all_results_keys[sex][year] = find_best_features(year, features, sex, heavy)
             results, keys = all_results_keys[sex][year]
             for j in sorted(results.keys()):
                 show_result(results, keys, j) 

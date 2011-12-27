@@ -220,6 +220,68 @@ sex = m, year = 3
     12: 0.623 [0, 1, 2, 4, 9, 13, 15, 22, 24, 25, 29, 30] ['AgeAtFirstClaim', 'None', 'AMI', 'ARTHSPIN', 'FLaELEC', 'GYNEC1', 'HEART4', 'MISCL1', 'MSC2a3', 'NEUMENT', 'PRGNCY', 'RENAL2']
     13: 0.623 [0, 1, 2, 4, 5, 9, 13, 14, 15, 22, 24, 25, 29] ['AgeAtFirstClaim', 'None', 'AMI', 'ARTHSPIN', 'CANCRA', 'FLaELEC', 'GYNEC1', 'HEART2', 'HEART4', 'MISCL1', 'MSC2a3', 'NEUMENT', 'PRGNCY']
 
+Refined to Patients with Drug Counts and Lab Counts  
+===================================================
+sex = f, year = 2
+-----------------
+     1: 0.583 [2] ['DrugCount']
+     2: 0.592 [2, 4] ['DrugCount', 'LabCount']
+     3: 0.610 [0, 15, 35] ['AgeAtFirstClaim', 'GIBLEED', 'PRGNCY']
+     4: 0.616 [0, 3, 15, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'GIBLEED', 'PRGNCY']
+     5: 0.623 [0, 2, 15, 35, 38] ['AgeAtFirstClaim', 'DrugCount', 'GIBLEED', 'PRGNCY', 'RESPR4']
+     6: 0.627 [0, 2, 15, 19, 35, 38] ['AgeAtFirstClaim', 'DrugCount', 'GIBLEED', 'HEART2', 'PRGNCY', 'RESPR4']
+     7: 0.630 [0, 1, 2, 15, 35, 38, 39] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'GIBLEED', 'PRGNCY', 'RESPR4', 'ROAMI']
+     8: 0.632 [0, 1, 2, 15, 19, 21, 35, 38] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'GIBLEED', 'HEART2', 'HEMTOL', 'PRGNCY', 'RESPR4']
+     9: 0.632 [0, 1, 2, 4, 14, 15, 19, 35, 38] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'LabCount', 'FXDISLC', 'GIBLEED', 'HEART2', 'PRGNCY', 'RESPR4']
+    10: 0.634 [0, 1, 2, 4, 14, 15, 19, 20, 35, 38] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'LabCount', 'FXDISLC', 'GIBLEED', 'HEART2', 'HEART4', 'PRGNCY', 'RESPR4']
+    11: 0.635 [0, 1, 2, 4, 10, 14, 15, 19, 20, 35, 38] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'LabCount', 'CANCRB', 'FXDISLC', 'GIBLEED', 'HEART2', 'HEART4', 'PRGNCY', 'RESPR4']
+    12: 0.636 [0, 1, 2, 15, 20, 28, 35, 36, 38, 39, 41, 42] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'GIBLEED', 'HEART4', 'MISCL1', 'PRGNCY', 'RENAL2', 'RESPR4', 'ROAMI', 'SKNAUT', 'STROKE']
+    13: 0.636 [0, 1, 2, 15, 20, 28, 33, 35, 36, 38, 39, 41, 42] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'DrugCount', 'GIBLEED', 'HEART4', 'MISCL1', 'PERVALV', 'PRGNCY', 'RENAL2', 'RESPR4', 'ROAMI', 'SKNAUT', 'STROKE']
+sex = f, year = 3
+-----------------
+     1: 0.581 [4] ['LabCount']
+     2: 0.584 [4, 15] ['LabCount', 'GIBLEED']
+     3: 0.603 [0, 35, 39] ['AgeAtFirstClaim', 'PRGNCY', 'ROAMI']
+     4: 0.612 [0, 3, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'PRGNCY', 'ROAMI']
+     5: 0.614 [0, 2, 3, 32, 35] ['AgeAtFirstClaim', 'DrugCount', 'LabCount_DSFS', 'ODaBNCA', 'PRGNCY']
+     6: 0.619 [0, 3, 14, 29, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'FXDISLC', 'MISCL5', 'PRGNCY', 'ROAMI']
+     7: 0.621 [0, 3, 6, 8, 29, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ARTHSPIN', 'MISCL5', 'PRGNCY', 'ROAMI']
+     8: 0.625 [0, 3, 8, 21, 23, 29, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'ARTHSPIN', 'HEMTOL', 'INFEC4', 'MISCL5', 'PRGNCY', 'ROAMI']
+     9: 0.628 [0, 3, 8, 10, 21, 23, 29, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'ARTHSPIN', 'CANCRB', 'HEMTOL', 'INFEC4', 'MISCL5', 'PRGNCY', 'ROAMI']
+    10: 0.628 [0, 3, 8, 10, 19, 21, 23, 29, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'ARTHSPIN', 'CANCRB', 'HEART2', 'HEMTOL', 'INFEC4', 'MISCL5', 'PRGNCY', 'ROAMI']
+    11: 0.629 [0, 3, 8, 10, 19, 21, 23, 29, 35, 38, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'ARTHSPIN', 'CANCRB', 'HEART2', 'HEMTOL', 'INFEC4', 'MISCL5', 'PRGNCY', 'RESPR4', 'ROAMI']
+    12: 0.629 [0, 3, 6, 8, 10, 19, 21, 23, 29, 32, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ARTHSPIN', 'CANCRB', 'HEART2', 'HEMTOL', 'INFEC4', 'MISCL5', 'ODaBNCA', 'PRGNCY', 'ROAMI']
+    13: 0.630 [0, 3, 6, 8, 10, 19, 21, 23, 24, 29, 32, 35, 39] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ARTHSPIN', 'CANCRB', 'HEART2', 'HEMTOL', 'INFEC4', 'LIVERDZ', 'MISCL5', 'ODaBNCA', 'PRGNCY', 'ROAMI']
+sex = m, year = 2
+-----------------
+     1: 0.620 [0] ['AgeAtFirstClaim']
+     2: 0.630 [0, 35] ['AgeAtFirstClaim', 'RESPR4']
+     3: 0.639 [0, 1, 28] ['AgeAtFirstClaim', 'DrugCount_DSFS', 'MSC2a3']
+     4: 0.644 [0, 2, 8, 28] ['AgeAtFirstClaim', 'DrugCount', 'ARTHSPIN', 'MSC2a3']
+     5: 0.652 [0, 2, 8, 28, 36] ['AgeAtFirstClaim', 'DrugCount', 'ARTHSPIN', 'MSC2a3', 'ROAMI']
+     6: 0.655 [0, 2, 8, 28, 35, 36] ['AgeAtFirstClaim', 'DrugCount', 'ARTHSPIN', 'MSC2a3', 'RESPR4', 'ROAMI']
+     7: 0.659 [0, 2, 4, 8, 28, 34, 36] ['AgeAtFirstClaim', 'DrugCount', 'LabCount', 'ARTHSPIN', 'MSC2a3', 'RENAL3', 'ROAMI']
+     8: 0.664 [0, 2, 6, 8, 28, 33, 34, 35] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4']
+     9: 0.664 [0, 2, 6, 8, 28, 33, 34, 35, 39] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4', 'STROKE']
+    10: 0.666 [0, 2, 6, 8, 21, 27, 28, 33, 34, 35] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'INFEC4', 'MISCL5', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4']
+    11: 0.666 [0, 2, 6, 8, 16, 18, 26, 28, 33, 34, 35] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'GIOBSENT', 'HEART2', 'MISCL1', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4']
+    12: 0.667 [0, 2, 6, 8, 16, 18, 26, 28, 33, 34, 35, 39] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'GIOBSENT', 'HEART2', 'MISCL1', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4', 'STROKE']
+    13: 0.668 [0, 2, 6, 8, 17, 18, 21, 26, 27, 28, 33, 34, 35] ['AgeAtFirstClaim', 'DrugCount', 'AMI', 'ARTHSPIN', 'GYNEC1', 'HEART2', 'INFEC4', 'MISCL1', 'MISCL5', 'MSC2a3', 'RENAL2', 'RENAL3', 'RESPR4']
+sex = m, year = 3
+-----------------
+     1: 0.620 [0] ['AgeAtFirstClaim']
+     2: 0.632 [0, 27] ['AgeAtFirstClaim', 'MSC2a3']
+     3: 0.644 [0, 3, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'ROAMI']
+     4: 0.649 [0, 3, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'RESPR4', 'ROAMI']
+     5: 0.653 [0, 3, 6, 28, 34] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'NEUMENT', 'RESPR4']
+     6: 0.656 [0, 3, 6, 29, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ODaBNCA', 'RESPR4', 'ROAMI']
+     7: 0.656 [0, 3, 6, 29, 30, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ODaBNCA', 'PERVALV', 'RESPR4', 'ROAMI']
+     8: 0.657 [0, 3, 6, 9, 10, 29, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'CANCRA', 'CANCRB', 'ODaBNCA', 'RESPR4', 'ROAMI']
+     9: 0.659 [0, 3, 6, 8, 10, 23, 29, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ARTHSPIN', 'CANCRB', 'METAB1', 'ODaBNCA', 'RESPR4', 'ROAMI']
+    10: 0.659 [0, 3, 6, 8, 10, 23, 27, 29, 34, 35] ['AgeAtFirstClaim', 'LabCount_DSFS', 'AMI', 'ARTHSPIN', 'CANCRB', 'METAB1', 'MSC2a3', 'ODaBNCA', 'RESPR4', 'ROAMI']
+    11: 0.664 [0, 6, 8, 9, 10, 11, 16, 27, 32, 34, 35] ['AgeAtFirstClaim', 'AMI', 'ARTHSPIN', 'CANCRA', 'CANCRB', 'CHF', 'GIOBSENT', 'MSC2a3', 'RENAL2', 'RESPR4', 'ROAMI']
+    12: 0.665 [0, 6, 8, 9, 10, 11, 13, 15, 17, 27, 34, 35] ['AgeAtFirstClaim', 'AMI', 'ARTHSPIN', 'CANCRA', 'CANCRB', 'CHF', 'FLaELEC', 'GIBLEED', 'GYNEC1', 'MSC2a3', 'RESPR4', 'ROAMI']
+    13: 0.666 [0, 6, 8, 9, 10, 11, 13, 15, 16, 17, 27, 34, 35] ['AgeAtFirstClaim', 'AMI', 'ARTHSPIN', 'CANCRA', 'CANCRB', 'CHF', 'FLaELEC','GIBLEED', 'GIOBSENT', 'GYNEC1', 'MSC2a3', 'RESPR4', 'ROAMI']    
 
 Totals by Sex
 =============
