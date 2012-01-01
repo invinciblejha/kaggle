@@ -1,15 +1,17 @@
 """
+http://scikit-learn.sourceforge.net/dev/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC
 
 """
 #print __doc__
 
 import math
+import os
 import numpy as np
 from scipy import interp
 import pylab as pl
 
 import sklearn
-from sklearn import svm, metrics
+from sklearn import svm, metrics, linear_model
 from sklearn.metrics import roc_curve, auc
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.linear_model import SGDClassifier
@@ -44,7 +46,7 @@ def plot_2d_histo_raw(x0, x1, y, label_x, label_y, x0_len, x1_len):
     
     counts_pos = np.zeros([len(lut_0), len(lut_1)])
     counts_neg = np.zeros([len(lut_0), len(lut_1)])
-    
+
     # Make histogram
     for i in range(n):
         i0 = lut_0[x0[i]]
@@ -53,7 +55,7 @@ def plot_2d_histo_raw(x0, x1, y, label_x, label_y, x0_len, x1_len):
             counts_pos[i0,i1] += 1.0/n 
         else:    
             counts_neg[i0,i1] += 1.0/n 
-            
+
     print 'counts_pos = %s' % counts_pos.sum()      
     print 'counts_neg = %s' % counts_neg.sum() 
     
@@ -62,7 +64,7 @@ def plot_2d_histo_raw(x0, x1, y, label_x, label_y, x0_len, x1_len):
             r_pos = math.sqrt(counts_pos[i0][i1])/2.0
             r_neg = math.sqrt(counts_neg[i0][i1])/2.0
             #print ix,iy,r
-            
+
             if r_pos > r_neg:
                 circ = pl.Circle((u0+d0,u1+d1),radius=r_pos,color='red')
                 ax = pl.gca()
@@ -84,45 +86,59 @@ def plot_2d_histo_raw(x0, x1, y, label_x, label_y, x0_len, x1_len):
 def plot_classification(X, y, y_pred, keys, title, clf):
     print 'plot_classification(X=%s, y=%s, y_pred=%s, keys=%s, title=%s)' % (X.shape, 
         y.shape, y_pred.shape, keys, title)
-    h = .2 # step size in the mesh
+    h = .02 # step size in the mesh
     
-    # create a mesh to plot in
-    x_min, x_max = X[:,0].min()-1, X[:,0].max()+1
-    y_min, y_max = X[:,1].min()-1, X[:,1].max()+1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-    
-    pl.set_cmap(pl.cm.Paired)
+    n_plots = len(keys)*(len(keys)-1)//2
+    n_side = int(math.sqrt(float(n_plots)))
 
-    # Plot the decision boundary. For that, we will assign a color to each
-    # point in the mesh [x_min, m_max]x[y_min, y_max].
-    #pl.subplot(2, 2, i+1)
-    print 'xx.size=%s, xx.shape=%s, X.shape=%s' % (xx.size, xx.shape, X.shape)
-    points = np.zeros([xx.size, X.shape[1]])
-    points[:,0] = xx.ravel() 
-    points[:,1] = yy.ravel()
-    Z = clf.predict(points)
+    cnt = 1
+    for i0 in range(len(keys)):
+        for i1 in range(i0+1, len(keys)): 
+            # create a mesh to plot in
+            x_min, x_max = X[:,i0].min()-1, X[:,i0].max()+1
+            y_min, y_max = X[:,i1].min()-1, X[:,i1].max()+1
+            xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+            
+            pl.set_cmap(pl.cm.Paired)
 
-    # Put the result into a color plot
-    Z = Z.reshape(xx.shape)
-    pl.set_cmap(pl.cm.Paired)
-    pl.contourf(xx, yy, Z)
-    pl.axis('tight')
-    
-    #pl.xlabel(keys[0])
-    #pl.ylabel(keys[1])
+            # Plot the decision boundary. For that, we will assign a color to each
+            # point in the mesh [x_min, m_max]x[y_min, y_max].
+            print 'subplot(%d, %d, cnt=%d)' % (n_side, n_side, cnt)
+            pl.subplot(n_side, n_side, cnt)
+            print 'xx.size=%s, xx.shape=%s, X.shape=%s' % (xx.size, xx.shape, X.shape)
+            points = np.zeros([xx.size, X.shape[1]])
+            points[:,i0] = xx.ravel() 
+            points[:,i1] = yy.ravel()
+            Z = clf.predict(points)
 
-    # Plot also the training points
-    #pl.scatter(X[:,0], X[:,1], c=y)
-    
-    plot_2d_histo_raw(X[:,0], X[:,1], y, keys[0], keys[1], x_max-x_min, y_max-y_min)
+            # Put the result into a color plot
+            Z = Z.reshape(xx.shape)
+            pl.set_cmap(pl.cm.Paired)
+            pl.contourf(xx, yy, Z)
+            pl.axis('tight')
+            
+            #pl.xlabel(keys[0])
+            #pl.ylabel(keys[1])
 
-    pl.title(title)
+            # Plot also the training points
+            #pl.scatter(X[:,0], X[:,1], c=y)
+            
+            plot_2d_histo_raw(X[:,i0], X[:,i1], y, keys[i0], keys[i1], x_max-x_min, y_max-y_min)
 
-    pl.axis('tight')
+            #pl.title('%s vs %s' % (keys[i1], keys[i0]))
+
+            pl.axis('tight')
+            cnt +=1 
+            if cnt > n_side ** 2:
+                break
+        if cnt > n_side ** 2:
+            break
+            
+    pl.savefig(os.path.join('results', '%s.png' % title)) 
     pl.show()
 
-def classify(X, y, keys):
-    print 'classify(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, keys)
+def classify_old(title, X, y, keys, get_classifier):
+    print 'classify(title=%s, X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
 
     Xr, yr = select_features.resample_equal_y(X, y, 1.0)
     print 'classify: Xr=%s, yr=%s' % (Xr.shape, yr.shape)
@@ -169,24 +185,176 @@ def classify(X, y, keys):
                 
                 y_test_all = np.r_[y_test_all, y_test]
                 y_pred_all = np.r_[y_pred_all, y_pred]
-            
+
             common.HEADING()
             print 'Classification report for all %s:\n%s\n' % (
                     classifier, metrics.classification_report(y_test_all, y_pred_all))
             print 'Confusion matrix:\n%s' % metrics.confusion_matrix(y_test_all, y_pred_all)
 
             # plot the line, the points, and the nearest vectors to the plane
-            fac = 1.0
-            print 'Downsampling by a further factor of %f' % fac
-            X_r, y_r = sklearn.utils.resample(X, y, n_samples = int(X.shape[0] * fac)) 
-            y_pred = classifier.predict(X)
-            plot_classification(X_r, y_r, y_pred, keys, 'Test', classifier)
-    exit()
+            if False:
+                fac = 1.0
+                print 'Downsampling by a further factor of %f' % fac
+                X_r, y_r = sklearn.utils.resample(X, y, n_samples = int(X.shape[0] * fac)) 
+            y_pred = classifier.predict(Xr)
+            plot_classification(Xr, yr, y_pred, keys, title, classifier)  
+
+def classify_by_method(title, Xr, yr, keys, get_classifier, plot):
+    common.HEADING()
+    print 'classify_by_method: Xr=%s, yr=%s "%s"' % (Xr.shape, yr.shape, title)
+    
+    n_samples = Xr.shape[0]
+ 
+    NUM_FOLDS = 2
+    skf = StratifiedKFold(yr, NUM_FOLDS)
+
+    verbose = False
+
+    if verbose:
+        def P(s): print s
+    else:
+        def P(s): pass
+  
+    y_test_all = np.zeros(0)
+    y_pred_all = np.zeros(0)
+    for i,(train, test) in enumerate(skf):
+        X_train, y_train = Xr[train,:], yr[train]
+        X_test, y_test = Xr[test,:], yr[test]
+    
+        if verbose: common.SUBHEADING()
+        P('Fold %d of %d' % (i, NUM_FOLDS))
+        P('classify: X_train=%s, y_train=%s' % (X_train.shape, y_train.shape))
+        P('classify:  X_test=%s,  y_test=%s' % (X_test.shape, y_test.shape))
+
+        # fit the model
+        classifier = get_classifier()
+   
+        classifier.fit(X_train, y_train)
+        y_pred = classifier.predict(X_test)
+
+        P('Classification report for classifier %s:\n%s\n' % (classifier, 
+            metrics.classification_report(y_test, y_pred)))
+        P('Confusion matrix:\n%s' % metrics.confusion_matrix(y_test, y_pred))
+        
+        y_test_all = np.r_[y_test_all, y_test]
+        y_pred_all = np.r_[y_pred_all, y_pred]
+    
+    if verbose: common.SUBHEADING()
+    print 'Classification report for all %s:\n%s\n' % (
+            classifier, metrics.classification_report(y_test_all, y_pred_all))
+    print 'Confusion matrix:\n%s' % metrics.confusion_matrix(y_test_all, y_pred_all)
+
+    # plot the line, the points, and the nearest vectors to the plane
+    if False:
+        fac = 1.0
+        print 'Downsampling by a further factor of %f' % fac
+        X_r, y_r = sklearn.utils.resample(X, y, n_samples = int(X.shape[0] * fac)) 
+    if plot:
+        y_pred = classifier.predict(Xr)
+        plot_classification(Xr, yr, y_pred, keys, title, classifier)
+
+def classify(title, X, y, keys):
+    print 'classify(title=%s, X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
+
+    Xr, yr = select_features.resample_equal_y(X, y, 1.0)
+       
+    n_iter_val = 500
+    power_t_val = 0.9
+    alpha_val = 0.1 
+
+    def get_sgd_hinge():
+        return SGDClassifier(loss="hinge", alpha=alpha_val, n_iter=n_iter_val, fit_intercept=True)
+ 
+    def get_rbf_svc():
+        return svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
+        
+    return classify_by_method(title + '_rbf', Xr, yr, keys, get_rbf_svc, True)
+
+def compare_classifiers(title, X, y, keys):
+    print 'compare_classifiers(title=%s, X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
+
+    Xr, yr = select_features.resample_equal_y(X, y, 1.0)
+   
+    n_iter_val = 5000
+    power_t_val = 0.9
+    alpha_val = 0.1 
+    CACHE_SIZE = 2000
+
+    def get_sgd_hinge():
+        return SGDClassifier(loss="hinge", alpha=alpha_val, n_iter=n_iter_val, fit_intercept=True)
+
+    def get_svd_linear(): 
+        return svm.SVC(kernel='linear')
+        
+    def get_svd_poly():    
+        return svm.SVC(kernel='poly')
+
+    def get_nu_linear():
+        return svm.NuSVC(kernel='linear')
+
+    def get_rbf_svc():
+        return svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
+        
+    def get_linear_svc():
+        return svm.LinearSVC()
+        
+    def get_bayes_ridge():
+        return linear_model.BayesianRidge()
+        
+    def get_log_reg_l1():    
+        return linear_model.LogisticRegression(C=1.0, penalty='l1', tol=1e-6)
+     
+    def get_log_reg_l2():    
+        return linear_model.LogisticRegression(C=1.0, penalty='l2', tol=1e-6)
+        
+    def get_lars():    
+        return linear_model.LassoLars(alpha = 0.1)    
+        
+    def get_lasso():
+        return linear_model.Lasso(alpha = 0.1)  
+
+    def get_ridge():
+        return linear_model.Ridge (alpha = 0.5)
+        
+    
+    # get_rbf_svc works best followed by get_log_reg_l*
+    classifiers = {
+        'sgd_hinge': get_sgd_hinge,
+        'svd_linear': get_svd_linear, 
+        'svd_poly': get_svd_poly,
+        'nu_linear': get_nu_linear,
+        'linear_svc': get_linear_svc,
+        'rbf_svc': get_rbf_svc,
+        #'bayes_ridge': get_bayes_ridge, Not a classifier
+        'log_reg_l1': get_log_reg_l1,
+        'log_reg_l2': get_log_reg_l2,
+        'lars': get_lars,
+        'lasso': get_lasso,
+        #'ridge': get_ridge,
+        
+    }
+
+    slow = ['svd_poly']
+    classifier_order = sorted(classifiers.keys(), key = lambda k: (k in slow, k))
+
+    #print svm.SVC.__doc__
+    if False:
+        for gamma in [0.0, 0.1, 0.2, 0.5]:
+            for C in [0.1, 0.2, 0.5, 1.0]:
+                def func():
+                    return svm.SVC(kernel='rbf', C=C, gamma=gamma)
+                    #return svm.SVC(kernel='rbf', cache_size=CACHE_SIZE, C=C, gamma=gamma)
+                name = '%s_gamma=%.2f_C=%.2f' % (title, gamma, C)
+                classify_by_method(name, Xr, yr, keys, func, False)
+
+    for name in classifier_order:
+        func = classifiers[name]
+        classify_by_method(title + '_' + name, Xr, yr, keys, func, False)    
 
 def predict(X, y, keys):
-    
+
     print 'predict(%s, %s)' % (X.shape, y.shape, keys)
-    
+
     # Run classifier with crossvalidation and plot ROC curves
     cv = StratifiedKFold(y, k=6)
     classifier = svm.SVC(kernel='linear', probability=True)

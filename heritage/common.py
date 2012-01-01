@@ -128,7 +128,7 @@ def get_dict_all(filename, xform, verbose = False):
        xform is applied to all values
     """
     column_keys, get_data = get_csv(filename)
-    print 'column_keys', column_keys
+    #print 'column_keys', column_keys
     
     if xform:
         col_xforms = [xform for i in range(len(column_keys))]
@@ -136,7 +136,7 @@ def get_dict_all(filename, xform, verbose = False):
         col_xforms = [get_map_function(filename, column) for column in column_keys[1:]]
         print col_xforms
      
-    print 'get_dict_all(filename=%s, column_keys=%s, xform=%s)' % (filename, column_keys, xform)
+    #print 'get_dict_all(filename=%s, column_keys=%s, xform=%s)' % (filename, column_keys, xform)
     data_dict = {}
     for i, (k,row) in enumerate(get_data()):
         out_row = []
@@ -150,7 +150,7 @@ def get_dict_all(filename, xform, verbose = False):
                     column_keys[j+1], i, j), row
             continue       
         data_dict[k] = out_row
-    print '  num rows = %d' % i    
+    #print '  num rows = %d' % i    
     return column_keys, data_dict
     
 def combine_dicts(columns1, dict1, columns2, dict2, use_dict1 = False):

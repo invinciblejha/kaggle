@@ -17,7 +17,7 @@ print __doc__
 
 import numpy as np
 import sklearn
-from sklearn import datasets, neighbors, linear_model
+from sklearn import datasets, neighbors, linear_model, svm
 from sklearn.metrics import confusion_matrix
 from sklearn import cross_validation
 import common 
@@ -58,8 +58,9 @@ if False:
     print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
     print 'logistic cv f', f_log, sum(f_log)/len(f_log)
 
-_classifier = linear_model.LogisticRegression()
+#_classifier = linear_model.LogisticRegression()
 #_classifier = neighbors.NeighborsClassifier(n_neighbors=5)
+_classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
 
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
@@ -78,7 +79,7 @@ def resample_equal_y(X, y, fac):
             there are many y[i]==1 samples (=> downsampling is ok)
     """
     from sklearn.utils import shuffle
-    verbose = True
+    verbose = False
     
     X0 = X[y==0,:]
     X1 = X[y==1,:]
@@ -86,30 +87,25 @@ def resample_equal_y(X, y, fac):
     y1 = y[y==1]
     
     if verbose:
-        print 'X0 ', X0.shape
-        print 'y0 ', y0.shape
-        print 'X1 ', X1.shape
-        print 'y1 ', y1.shape
+        print 'X0=%s y0=%s' % (X0.shape, y0.shape)
+        print 'X1=%s y1=%s' % (X1.shape, y1.shape)
     
     # Downsample y[i]==0 on rows
     X0r, y0r = sklearn.utils.resample(X0, y0, n_samples=X1.shape[0])  
     
     if verbose:
-        print 'X0r', X0r.shape
-        print 'y0r', y0r.shape
+        print 'X0r=%s y0r=%s' % (X0r.shape, y0r.shape)
     
     Xr = np.r_[X0r, X1]
     yr = np.r_[y0r, y1]
     
     if verbose:
-        print 'Xr ', Xr.shape
-        print 'yr ', yr.shape
+        print 'Xr=%s yr=%s' % (Xr.shape, yr.shape)
         
     if fac != 1.0:
         print 'Downsampling by a further factor of %f' % fac
         Xr, yr = sklearn.utils.resample(Xr, yr, n_samples = int(Xr.shape[0] * fac))  
-        print 'Xr ', Xr.shape
-        print 'yr ', yr.shape
+        print 'Xr=%s yr=%s' % (Xr.shape, yr.shape)
 
     # Give them a shuffle    
     Xr, yr= shuffle(Xr, yr)    

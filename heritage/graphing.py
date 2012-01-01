@@ -16,9 +16,7 @@ def plot_histo(title, a_list):
   
 def plot_2d_histo_raw(counts, color, label_x, label_y):
     """Plot a 2D histogram
-        x_vals contains the x values
-        y_vals contains the x values
-        counts[x][y] is the number of counts at x,y
+       counts[x][y] is the number of counts at x,y
     """
     
     X = []

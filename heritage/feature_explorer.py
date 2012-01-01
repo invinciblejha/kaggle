@@ -1,5 +1,3 @@
-
-
 from __future__ import division
 """
   Find which pcg keys correlate with {DIH==0|DIH!=0}
@@ -11,6 +9,7 @@ import numpy as np
 import pylab as pl
 from sklearn.linear_model import SGDClassifier
 import common
+import select_features
 
 def get_dih_filename(year):
     """Return name of "days in hospital" spreadsheet for specified year"""
@@ -287,7 +286,7 @@ def getXy_for_dict(year, keys, counts_dict):
             y=days in hospital
     """
 
-    print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(keys))
+    #print 'getXy_for_dict(year=%d) dict= %d x %d' % (year, len(counts_dict), len(keys))
 
     dih_dict = get_dih(year)
 
@@ -307,9 +306,9 @@ def getXy_for_dict(year, keys, counts_dict):
                 has_no_dih[i] = 1 
 
     counts_list = [counts_dict[k] for k in user_keys]
-    print 'counts_list[0] = ', len(counts_list), counts_list[0], type(counts_list[0]), type(counts_list[0][0]) 
+    #print 'counts_list[0] = ', len(counts_list), counts_list[0], type(counts_list[0]), type(counts_list[0][0]) 
     counts = np.array(counts_list, dtype=float) 
-    print 'counts:', counts.shape 
+    #print 'counts:', counts.shape 
    
     X = counts
     y = has_dih
@@ -359,15 +358,15 @@ def getXy_all_all(year):
     
     patient_keys, patient_dict = get_patient_dict()
     keys, counts_dict =  patient_keys[1:], patient_dict
-    print 'patient_dict = %d' % len(counts_dict)
+    #print 'patient_dict = %d' % len(counts_dict)
     
     drug_keys, drug_dict = get_drugcount_dict(year-1)
     keys, counts_dict = common.combine_dicts(keys, counts_dict, drug_keys[1:], drug_dict, use_dict1 = True)
-    print '+drug_dict = %d' % len(counts_dict)
+    #print '+drug_dict = %d' % len(counts_dict)
     
     lab_keys, lab_dict = get_labcount_dict(year-1)
     keys, counts_dict = common.combine_dicts(keys, counts_dict, lab_keys[1:], lab_dict, use_dict1 = True)
-    print '+lab_dict = %d' % len(counts_dict)
+    #print '+lab_dict = %d' % len(counts_dict)
     
     if False:
         pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
@@ -378,7 +377,7 @@ def getXy_all_all(year):
         pre_keys, pre_dict = get_counts_dict(prefix, year-1)
         pre_keys = ['%s=%s' % (prefix, k) for k in pre_keys]
         keys, counts_dict = common.combine_dicts(keys, counts_dict, pre_keys[1:], pre_dict)
-        print '+%s_dict = %d' % (prefix, len(counts_dict)) 
+        #print '+%s_dict = %d' % (prefix, len(counts_dict)) 
     
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
@@ -399,7 +398,7 @@ def getXy_by_features(year, features, sex):
     elif features == 'all2':
         X,y,keys = getXy_all_all(year)    
     
-    print 'keys=%s' % keys
+    #print 'keys=%s' % keys
 
     if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
         # Get male or female population
@@ -417,12 +416,11 @@ def getXy_by_features(year, features, sex):
     significant = Xtot >= LOW_COUNT_THRESHOLD
     # Remove sex too, as we are selection on it
     significant[sex_key] = False
-    print 'Removing keys < %d: %s' % (LOW_COUNT_THRESHOLD,
-        [keys[i] for i in range(len(keys)) if not significant[i]])
-    print 'keys=%d X=%s => ' % (len(keys), X.shape),    
+    #print 'Removing keys < %d: %s' % (LOW_COUNT_THRESHOLD, [keys[i] for i in range(len(keys)) if not significant[i]])
+    #print 'keys=%d X=%s => ' % (len(keys), X.shape),    
     keys = [keys[i] for i in range(len(keys)) if significant[i]]
     X = X[:,significant] 
-    print 'keys=%d X=%s' % (len(keys), X.shape) 
+    #print 'keys=%d X=%s' % (len(keys), X.shape) 
     
     # Normalize
     means = X.mean(axis=0)
@@ -473,7 +471,16 @@ def make_predictions(year, features, sex):
     X, y, keys = getXy_by_features(year, features, sex)
     X = X[:,PREDICTIVE_INDICES]
     keys = [keys[i] for i in PREDICTIVE_INDICES]
-    predict.classify(X, y, keys)
+    predict.classify('sex=%s_year=%d' % (sex,year), X, y, keys)
+    
+def compare_classifiers(year, features, sex):
+    import predict
+    PREDICTIVE_INDICES = [0, 25, 43, 65]
+    print 'compare_classifiers(year=%d)' % year
+    X, y, keys = getXy_by_features(year, features, sex)
+    X = X[:,PREDICTIVE_INDICES]
+    keys = [keys[i] for i in PREDICTIVE_INDICES]
+    predict.compare_classifiers('sex=%s_year=%d' % (sex,year), X, y, keys)    
 
 if False:    
     show_totals_by_dih(2)            
@@ -483,7 +490,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if False:
+if True:
     import os
     import random
     import ga
@@ -539,12 +546,18 @@ if False:
             for j in sorted(results.keys()):
                 show_result(results, keys, j)        
             
-if True:
+if False:
     features = 'all2'
     for sex in ['f', 'm']:
         for year in (2,3):
             make_predictions(year, features, sex)
-        
+            
+if False:
+    features = 'all2'
+    for sex in ['f', 'm']:
+        for year in (2,3):
+            compare_classifiers(year, features, sex)
+
 if False:
     for year in (2,3):
         compare_sexes(year)
