@@ -295,7 +295,8 @@ class CompoundClassifier:
         
     def train(self, X, y, keys, sex_class, age_class):
         self.add(get_trained_classifier(X, y, keys), keys, sex_class, age_class)
-        
+        assert(X.shape[1] == len(keys))
+
     def get_classfier(self, sex, age):
         sex_class = self.get_sex_class(sex)
         age_class = self.get_age_class(age)
@@ -322,7 +323,8 @@ class CompoundClassifier:
             age = x[age_index]
             classifier, classifier_keys = self.get_classfier(sex, age)
             print 'classifier:', classifier
-            key_indexes = [k in classifier_keys for k in self._keys]
+            key_indexes = np.array([(k in classifier_keys) for k in self._keys])
+            print 'key_indexes = %s' % key_indexes
             xc = x[key_indexes]
             return classifier.predict(xc)
 
