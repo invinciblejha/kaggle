@@ -9,6 +9,7 @@ import numpy as np
 import pylab as pl
 from sklearn.linear_model import SGDClassifier
 import common
+from common import AGES, AGE_LOW, AGE_MEDIUM, AGE_HIGH
 import select_features
 
 def get_dih_filename(year):
@@ -384,10 +385,6 @@ def getXy_all_all(year):
 # Remove columns with counts below this threshold
 LOW_COUNT_THRESHOLD = 100   
 
-AGE_LOW = 1
-AGE_MEDIUM = 2
-AGE_HIGH = 3
-AGES = [AGE_LOW, AGE_MEDIUM, AGE_HIGH]
 
 def getXy_by_features_(year, features):
     """Return X,y for year, features and age
@@ -395,7 +392,7 @@ def getXy_by_features_(year, features):
         year = -1 => all years
         age = None => all ages
     """
-    print 'getXy_by_features(year=%d,features=%s,sex=%s,age=%s)' % (year, features, sex, age)
+    print 'getXy_by_features(year=%d,features=%s)' % (year, features)
     
     def get_by_year(year):
         assert(year > 0)
@@ -421,16 +418,20 @@ def getXy_by_features_(year, features):
     
     return X,y,keys
 
-def getXy_by_sex_age(X,y,keys, sex, age):
+def getXy_by_sex_age(X,y,keys, sex, age, sex_boundary = 0.5, age_boundaries = [1, 79]):
+    print 'getXy_by_sex_age(X=%s,y=%s,sex=%s,age=%s' % (X.shape, y.shape, sex, age)
+
     if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
         # Get male or female population
         sex_key = keys.index('Sex')
         if sex.lower()[0] == 'm':
-            p = X[:,sex_key] < 0.5
+            p = X[:,sex_key] < sex_boundary
         else:    
-            p = X[:,sex_key] > 0.5
+            p = X[:,sex_key] > sex_boundary
 
         X = X[p,:]
+        y = y[p]
+        print 'sex=%s => X=%s,y=%s' % (sex, X.shape, y.shape)
 
     if age in AGES and 'AgeAtFirstClaim' in keys:
         # Get population for age group
@@ -438,21 +439,27 @@ def getXy_by_sex_age(X,y,keys, sex, age):
         # ['', '0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
         age_key = keys.index('AgeAtFirstClaim')
         if age == AGE_LOW:
-            p = X[:,age_key] == 0
+            p = X[:,age_key] < age_boundaries[0]
         elif age == AGE_HIGH:    
-            p = X[:,age_key] == 80
+            p = X[:,age_key] > age_boundaries[1]
         else:    
-            p = (X[:,age_key] > 0) & (X[:,age_key] < 80)    
+            p = (X[:,age_key] > age_boundaries[0]) & (X[:,age_key] < age_boundaries[1])    
 
         X = X[p,:]
         y = y[p] 
+        print 'age=%s => X=%s,y=%s' % (age, X.shape, y.shape)
         print 'Ages min=%d,max=%d' % (X[:,age_key].min(), X[:,age_key].max())
 
     # Remove columns with low counts
     Xtot = X.sum(axis=0)
     significant = Xtot >= LOW_COUNT_THRESHOLD
-    # Remove sex too, as we are selection on it
+    # Remove sex too, as we are selecting on it
     significant[sex_key] = False
+    
+    # age only has one value in these cases
+    if age == AGE_LOW or age == AGE_HIGH:
+        significant[age_key] = False
+    
     #print 'Removing keys < %d: %s' % (LOW_COUNT_THRESHOLD, [keys[i] for i in range(len(keys)) if not significant[i]])
     #print 'keys=%d X=%s => ' % (len(keys), X.shape),    
     keys = [keys[i] for i in range(len(keys)) if significant[i]]
@@ -548,7 +555,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if True:
+if False:
     import os
     import random
     import ga
@@ -629,11 +636,14 @@ if False:
 if False:
     for year in (2,3):
         compare_sexes(year)
-        
-if False:
+
+if True:
     import os
     import random
+    from sklearn.cross_validation import StratifiedKFold
     import ga
+    import predict
+    
      # Set random seed so that each run gives same results
     random.seed(333)
     np.random.seed(333)
@@ -641,15 +651,65 @@ if False:
     def P(s):
         """Print string s"""
         print s
-        logfile.write(s + '\n')
+        #logfile.write(s + '\n')
     
     features = 'all2'
+
+    X,y,keys = getXy_by_features_(-1, features)
+
+    Xr, yr = select_features.resample_equal_y(X, y, 1.0)
+    Xr, yr = normalize(Xr, yr)
+   
+    sex_vals = np.unique(Xr[:,keys.index('Sex')])
+    age_vals = np.unique(Xr[:,keys.index('AgeAtFirstClaim')])
+    sex_boundary = sex_vals.mean()
+    age_boundaries = [0.5*(age_vals[i]+age_vals[i+1]) for i in [0,age_vals.size-2]] 
+    print 'sex_vals = %s' % sex_vals
+    print 'age_vals = %s' % age_vals
+    print 'sex_boundary = %s' % sex_boundary
+    print 'age_boundaries = %s' % age_boundaries
+        
+   
+    print 'Xr=%s,yr=%s' % (Xr.shape, yr.shape)
+    NUM_FOLDS = 2
+    skf = StratifiedKFold(yr, NUM_FOLDS)
     
-    _, _, keys = getXy_by_features_(2, features, None, None)
-    classifier = predict.CompoundClassifier(keys, 'Sex', 'AgeAtFirstClaim')
+    y_test_all = np.zeros(0)
+    y_pred_all = np.zeros(0)
+            
+    for i,(train, test) in enumerate(skf):
+        X_train, y_train = Xr[train,:], yr[train]
+        X_test, y_test = Xr[test,:], yr[test]
+        
+        print 'X_train=%s,y_train=%s' % (X_train.shape, y_train.shape)
+    
+        common.SUBHEADING()
+        P('Fold %d of %d' % (i, NUM_FOLDS))
+        P('classify: X_train=%s, y_train=%s' % (X_train.shape, y_train.shape))
+        P('classify:  X_test=%s,  y_test=%s' % (X_test.shape, y_test.shape))
+
+        classifier = predict.CompoundClassifier(keys, 'Sex', 'AgeAtFirstClaim', 
+            sex_boundary, age_boundaries)
       
-    for sex in ['f', 'm']:
-        for age in AGES:
-            X, y, keys = getXy_by_features(-1, features, sex, age)
-            classifier.train(X, y, keys)
-                      
+        for sex in ['f', 'm']:
+            for age in AGES:
+                Xsa,ysa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, age_boundaries)
+                print 'X_train=%s,y_train=%s' % (Xsa.shape, ysa.shape)
+                classifier.train(Xsa, ysa, keys, sex, age)
+        
+        classifier.show_all()
+        
+        y_pred = classifier.predict(X_test, keys)
+
+        P('Classification report for classifier %s:\n%s\n' % (classifier, 
+                    metrics.classification_report(y_test, y_pred)))
+        P('Confusion matrix:\n%s' % metrics.confusion_matrix(y_test, y_pred))
+        
+        y_test_all = np.r_[y_test_all, y_test]
+        y_pred_all = np.r_[y_pred_all, y_pred]    
+        
+    common.HEADING()
+    print 'Classification report for all %s:\n%s\n' % (
+                    classifier, metrics.classification_report(y_test_all, y_pred_all))
+    print 'Confusion matrix:\n%s' % metrics.confusion_matrix(y_test_all, y_pred_all)
+    

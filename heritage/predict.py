@@ -13,11 +13,11 @@ import pylab as pl
 import sklearn
 from sklearn import svm, metrics, linear_model
 from sklearn.metrics import roc_curve, auc
-from sklearn.cross_validation import StratifiedKFold
 from sklearn.linear_model import SGDClassifier
 from sklearn.cross_validation import StratifiedKFold
 
 import common  
+from common import AGES, AGE_LOW, AGE_MEDIUM, AGE_HIGH
 import select_features
 
 def plot_2d_histo_raw(x0, x1, y, label_x, label_y, x0_len, x1_len):
@@ -253,46 +253,63 @@ def classify_by_method(title, Xr, yr, keys, get_classifier, plot):
         y_pred = classifier.predict(Xr)
         plot_classification(Xr, yr, y_pred, keys, title, classifier)
         
-def get_trained_classifier( X, y, keys):
+def get_trained_classifier(X, y, keys):
     """Return classifier trained on X and y
        X columns are typically a subset of a bigger X
        No resampling as this is for part of a data set
        """
-    print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
+    print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
     
     #Xr, yr = select_features.resample_equal_y(X, y, 1.0)
     
     # Our current best classifier
     classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
     classifier.fit(X, y)
-    return classifier, keys
+    return classifier
 
 class CompoundClassifier:
-    def __init__(self, keys, sex_key, age_key):
+    def __init__(self, keys, sex_key, age_key, sex_boundary, age_boundaries):
         assert(sex_key in keys)
         assert(age_key in keys)
         self._entries = []
         self._keys = keys
         self._sex_key = sex_key
         self._age_key = age_key
-
-    def add(self, classifier, keys, sex, age):
-        assert(all([k in self._keys for k in keys]))
-        self._entries.append({'classifier':classifier, 'keys':keys, 'sex':sex, 'age':age})
+        self._sex_boundary = sex_boundary
+        self._age_boundaries = age_boundaries
         
-    def train(self, X, y, keys):
-        self.add(get_trained_classifier(X, y, keys)
+    def get_sex_class(self, sex):
+        return 'm' if sex < self._sex_boundary else 'f'
+        
+    def get_age_class(self, age):
+        if age < self._age_boundaries[0]:
+            return AGE_LOW 
+        elif age > self._age_boundaries[1]:
+            return AGE_HIGH    
+        else:  
+            return AGE_MEDIUM
+
+    def add(self, classifier, keys, sex_class, age_class):
+        assert(all([k in self._keys for k in keys]))
+        self._entries.append({'classifier':classifier, 'keys':keys, 'sex':sex_class, 'age':age_class})
+        
+    def train(self, X, y, keys, sex_class, age_class):
+        self.add(get_trained_classifier(X, y, keys), keys, sex_class, age_class)
         
     def get_classfier(self, sex, age):
-        for e in self._entries:
-            if e['sex'] == sex and e['age'] == age:
-                return e['classifier'], e['keys']
-        raise ValueError('No classifier for sex=%s,age=%s' % (sex, age)) 
+        sex_class = self.get_sex_class(sex)
+        age_class = self.get_age_class(age)
+        for i,e in enumerate(self._entries):
+            print '--%4d: %s %s' % (i, e['sex'], e['age'])
+            if e['sex'] == sex_class and e['age'] == age_class:
+                return e['classifier'], e['keys'] 
+        raise ValueError('No classifier for sex=%s,age=%s (sex_class=%s, age_class=%d)' % (sex, age,
+            sex_class, age_class)) 
     
     def show_all(self):
-        print 'keys=%s' 
+        common.SUBHEADING()
         for i,e in enumerate(self._entries):
-            print '%4d: %s' % (i, e)
+            print '%4d: %s %s : %s' % (i, e['sex'], e['age'], e['classifier'])
     
     def predict(self, X, keys):
         assert(all([k in self._keys for k in keys]))
@@ -303,13 +320,14 @@ class CompoundClassifier:
         def predict_one(x):
             sex = x[sex_index]
             age = x[age_index]
-            classifer, classifer_keys = self.get_classfier(sex, age)
-            key_indexes = [keys.index[k] for k in classifier_keys]
+            classifier, classifier_keys = self.get_classfier(sex, age)
+            print 'classifier:', classifier
+            key_indexes = [k in classifier_keys for k in self._keys]
             xc = x[key_indexes]
             return classifier.predict(xc)
 
         y = np.zeros(X.shape[0])
-        for in range(X.shape[0]):
+        for i in range(X.shape[0]):
             y[i] = predict_one(X[i,:])
             
         return y 

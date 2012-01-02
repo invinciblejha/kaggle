@@ -12,6 +12,11 @@ import csv
 import time
 import pickle
 
+AGE_LOW = 1
+AGE_MEDIUM = 2
+AGE_HIGH = 3
+AGES = [AGE_LOW, AGE_MEDIUM, AGE_HIGH]
+
 def HEADING():
     print  '=' * 80
 
