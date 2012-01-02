@@ -466,7 +466,7 @@ def getXy_by_sex_age(X,y,keys, sex, age, sex_boundary = 0.5, age_boundaries = [1
     X = X[:,significant] 
     #print 'keys=%d X=%s' % (len(keys), X.shape) 
 
-    return X,y
+    return X,y,keys
 
 def normalize(X, y):
     # Normalize
@@ -489,7 +489,7 @@ def getXy_by_features(year, features, sex, age = None):
     print 'getXy_by_features(year=%d,features=%s,sex=%s,age=%s)' % (year, features, sex, age)
     
     X,y,keys = getXy_by_features_(year, features)
-    X,y = getXy_by_sex_age(X,y,keys, sex, age)
+    X,y,keys = getXy_by_sex_age(X,y,keys, sex, age)
     X,y = normalize(X, y)
 
     return X,y,keys  
@@ -643,23 +643,23 @@ if True:
     from sklearn.cross_validation import StratifiedKFold
     import ga
     import predict
-    
+
      # Set random seed so that each run gives same results
     random.seed(333)
     np.random.seed(333)
-    
+
     def P(s):
         """Print string s"""
         print s
         #logfile.write(s + '\n')
-    
+
     features = 'all2'
 
     X,y,keys = getXy_by_features_(-1, features)
 
     Xr, yr = select_features.resample_equal_y(X, y, 1.0)
     Xr, yr = normalize(Xr, yr)
-   
+
     sex_vals = np.unique(Xr[:,keys.index('Sex')])
     age_vals = np.unique(Xr[:,keys.index('AgeAtFirstClaim')])
     sex_boundary = sex_vals.mean()
@@ -668,21 +668,20 @@ if True:
     print 'age_vals = %s' % age_vals
     print 'sex_boundary = %s' % sex_boundary
     print 'age_boundaries = %s' % age_boundaries
-        
-   
+
     print 'Xr=%s,yr=%s' % (Xr.shape, yr.shape)
     NUM_FOLDS = 2
     skf = StratifiedKFold(yr, NUM_FOLDS)
-    
+
     y_test_all = np.zeros(0)
     y_pred_all = np.zeros(0)
-            
+
     for i,(train, test) in enumerate(skf):
         X_train, y_train = Xr[train,:], yr[train]
         X_test, y_test = Xr[test,:], yr[test]
-        
+
         print 'X_train=%s,y_train=%s' % (X_train.shape, y_train.shape)
-    
+
         common.SUBHEADING()
         P('Fold %d of %d' % (i, NUM_FOLDS))
         P('classify: X_train=%s, y_train=%s' % (X_train.shape, y_train.shape))
@@ -693,21 +692,21 @@ if True:
       
         for sex in ['f', 'm']:
             for age in AGES:
-                Xsa,ysa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, age_boundaries)
-                print 'X_train=%s,y_train=%s' % (Xsa.shape, ysa.shape)
-                classifier.train(Xsa, ysa, keys, sex, age)
-        
+                Xsa,ysa, ksa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, 
+                    age_boundaries)
+                print 'X_train=%s,y_train=%s,ksa=%d' % (Xsa.shape, ysa.shape, len(ksa))
+                classifier.train(Xsa, ysa, ksa, sex, age)
+
         classifier.show_all()
-        
+
         y_pred = classifier.predict(X_test, keys)
 
         P('Classification report for classifier %s:\n%s\n' % (classifier, 
                     metrics.classification_report(y_test, y_pred)))
-        P('Confusion matrix:\n%s' % metrics.confusion_matrix(y_test, y_pred))
-        
+
         y_test_all = np.r_[y_test_all, y_test]
         y_pred_all = np.r_[y_pred_all, y_pred]    
-        
+
     common.HEADING()
     print 'Classification report for all %s:\n%s\n' % (
                     classifier, metrics.classification_report(y_test_all, y_pred_all))

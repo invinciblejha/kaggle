@@ -294,6 +294,8 @@ class CompoundClassifier:
         self._entries.append({'classifier':classifier, 'keys':keys, 'sex':sex_class, 'age':age_class})
         
     def train(self, X, y, keys, sex_class, age_class):
+        print 'train(X=%s,y=%s,keys=%s' % (X.shape, y.shape, len(keys))
+     
         self.add(get_trained_classifier(X, y, keys), keys, sex_class, age_class)
         assert(X.shape[1] == len(keys))
 
