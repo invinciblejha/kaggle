@@ -389,7 +389,7 @@ AGE_MEDIUM = 2
 AGE_HIGH = 3
 AGES = [AGE_LOW, AGE_MEDIUM, AGE_HIGH]
 
-def getXy_by_features(year, features, sex, age = None):
+def getXy_by_features_(year, features):
     """Return X,y for year, features and age
         Age in AGES for 3 three groups
         year = -1 => all years
@@ -418,9 +418,10 @@ def getXy_by_features(year, features, sex, age = None):
         X3,y3,keys = get_by_year(3)
         X = np.r_[X2, X3]
         y = np.r_[y2, y3]
+    
+    return X,y,keys
 
-    #print 'keys=%s' % keys
-
+def getXy_by_sex_age(X,y,keys, sex, age):
     if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
         # Get male or female population
         sex_key = keys.index('Sex')
@@ -458,6 +459,9 @@ def getXy_by_features(year, features, sex, age = None):
     X = X[:,significant] 
     #print 'keys=%d X=%s' % (len(keys), X.shape) 
 
+    return X,y
+
+def normalize(X, y):
     # Normalize
     means = X.mean(axis=0)
     stds = X.std(axis=0)
@@ -467,7 +471,21 @@ def getXy_by_features(year, features, sex, age = None):
         if abs(stds[i]) > 1e-6:
             X[:,i] = X[:,i]/stds[i]    
 
-    return X, y, keys  
+    return X,y
+    
+def getXy_by_features(year, features, sex, age = None):
+    """Return X,y for year, features and age
+        Age in AGES for 3 three groups
+        year = -1 => all years
+        age = None => all ages
+    """
+    print 'getXy_by_features(year=%d,features=%s,sex=%s,age=%s)' % (year, features, sex, age)
+    
+    X,y,keys = getXy_by_features_(year, features)
+    X,y = getXy_by_sex_age(X,y,keys, sex, age)
+    X,y = normalize(X, y)
+
+    return X,y,keys  
 
 def find_best_features(year, features, sex, age, heavy):
     """year=-1 => both years 2,3 """
@@ -530,7 +548,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if False:
+if True:
     import os
     import random
     import ga
@@ -612,7 +630,7 @@ if False:
     for year in (2,3):
         compare_sexes(year)
         
-if True:
+if False:
     import os
     import random
     import ga
@@ -620,39 +638,18 @@ if True:
     random.seed(333)
     np.random.seed(333)
     
-           
     def P(s):
         """Print string s"""
         print s
         logfile.write(s + '\n')
     
-    classifier = predict.CompoundClassifier()
-    all_results_keys = {}
+    features = 'all2'
+    
+    _, _, keys = getXy_by_features_(2, features, None, None)
+    classifier = predict.CompoundClassifier(keys, 'Sex', 'AgeAtFirstClaim')
+      
     for sex in ['f', 'm']:
-        all_results_keys[sex] = {}
         for age in AGES:
-            all_results_keys[sex][age] = {}
-            for year in [-1,2,3]:
-                common.SUBHEADING()
-                all_results_keys[sex][age][year] = find_best_features(year, features, sex, age, heavy)
-                if False: # !@#$ debugging
-                    print all_results_keys[sex][age][year]
-                    print len(all_results_keys[sex][age][year]), '-' * 40
-                    print '0:', all_results_keys[sex][age][year][0]
-                    print '1:', all_results_keys[sex][age][year][1]
-                    print '2:', all_results_keys[sex][age][year][2]
-                    exit()
-                results, n_samples, keys = all_results_keys[sex][age][year]
-                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
-                for j in sorted(results.keys()):
-                    show_result(results, keys, j) 
-
-    P('=' * 80)
-
-    for sex in sorted(all_results_keys.keys()):
-        for age in sorted(all_results_keys[sex].keys()):
-            for year in sorted(all_results_keys[sex][age].keys()):
-                results, n_samples, keys = all_results_keys[sex][age][year]
-                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
-                for j in sorted(results.keys()):
-                    show_result(results, keys,  j)          
+            X, y, keys = getXy_by_features(-1, features, sex, age)
+            classifier.train(X, y, keys)
+                      
