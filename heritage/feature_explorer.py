@@ -352,27 +352,26 @@ def getXy_all(year):
 
 def getXy_all_all(year):    
     """ Should be treating no LabCount and no Drugcount as separate categories
-        
     """
     print 'getXy_all_all(year=%d)' % year
-    
+
     patient_keys, patient_dict = get_patient_dict()
     keys, counts_dict =  patient_keys[1:], patient_dict
     #print 'patient_dict = %d' % len(counts_dict)
-    
+
     drug_keys, drug_dict = get_drugcount_dict(year-1)
     keys, counts_dict = common.combine_dicts(keys, counts_dict, drug_keys[1:], drug_dict, use_dict1 = True)
     #print '+drug_dict = %d' % len(counts_dict)
-    
+
     lab_keys, lab_dict = get_labcount_dict(year-1)
     keys, counts_dict = common.combine_dicts(keys, counts_dict, lab_keys[1:], lab_dict, use_dict1 = True)
     #print '+lab_dict = %d' % len(counts_dict)
-    
+
     if False:
         pcg_keys, pcg_dict = get_pcg_counts_dict(year-1)
         keys, counts_dict = common.combine_dicts(keys, counts_dict, pcg_keys[1:], pcg_dict)
         print '+pcg_dict = %d' % len(counts_dict)    
-    
+
     for prefix in COUNTS_PREFIXES:
         pre_keys, pre_dict = get_counts_dict(prefix, year-1)
         pre_keys = ['%s=%s' % (prefix, k) for k in pre_keys]
@@ -381,23 +380,45 @@ def getXy_all_all(year):
     
     X,y = getXy_for_dict(year, keys, counts_dict)
     return X,y,keys
-    
-    
+
 # Remove columns with counts below this threshold
 LOW_COUNT_THRESHOLD = 100   
 
-def getXy_by_features(year, features, sex):
-    print 'getXy_by_features(year=%d,features=%s,sex=%s)' % (year, features, sex)
-    if features == 'pcg':
-        X,y,keys = getXy_pcg(year)
-    elif features == 'patient':
-        X,y,keys = getXy_patient(year)  
-               
-    elif features == 'all':
-        X,y,keys = getXy_all(year)
-    elif features == 'all2':
-        X,y,keys = getXy_all_all(year)    
+AGE_LOW = 1
+AGE_MEDIUM = 2
+AGE_HIGH = 3
+AGES = [AGE_LOW, AGE_MEDIUM, AGE_HIGH]
+
+def getXy_by_features(year, features, sex, age = None):
+    """Return X,y for year, features and age
+        Age in AGES for 3 three groups
+        year = -1 => all years
+        age = None => all ages
+    """
+    print 'getXy_by_features(year=%d,features=%s,sex=%s,age=%s)' % (year, features, sex, age)
     
+    def get_by_year(year):
+        assert(year > 0)
+        if features == 'pcg':
+            X,y,keys = getXy_pcg(year)
+        elif features == 'patient':
+            X,y,keys = getXy_patient(year)  
+
+        elif features == 'all':
+            X,y,keys = getXy_all(year)
+        elif features == 'all2':
+            X,y,keys = getXy_all_all(year)
+
+        return X,y,keys
+
+    if year > 0:
+        X,y,keys = get_by_year(year)
+    else:
+        X2,y2,keys = get_by_year(2)
+        X3,y3,keys = get_by_year(3)
+        X = np.r_[X2, X3]
+        y = np.r_[y2, y3]
+
     #print 'keys=%s' % keys
 
     if sex and sex.lower()[0] in 'mf' and 'Sex' in keys:
@@ -409,7 +430,22 @@ def getXy_by_features(year, features, sex):
             p = X[:,sex_key] > 0.5
 
         X = X[p,:]
-        y = y[p]
+
+    if age in AGES and 'AgeAtFirstClaim' in keys:
+        # Get population for age group
+        # python reduce.py -v Members.csv AgeAtFirstClaim        
+        # ['', '0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80+']
+        age_key = keys.index('AgeAtFirstClaim')
+        if age == AGE_LOW:
+            p = X[:,age_key] == 0
+        elif age == AGE_HIGH:    
+            p = X[:,age_key] == 80
+        else:    
+            p = (X[:,age_key] > 0) & (X[:,age_key] < 80)    
+
+        X = X[p,:]
+        y = y[p] 
+        print 'Ages min=%d,max=%d' % (X[:,age_key].min(), X[:,age_key].max())
 
     # Remove columns with low counts
     Xtot = X.sum(axis=0)
@@ -421,7 +457,7 @@ def getXy_by_features(year, features, sex):
     keys = [keys[i] for i in range(len(keys)) if significant[i]]
     X = X[:,significant] 
     #print 'keys=%d X=%s' % (len(keys), X.shape) 
-    
+
     # Normalize
     means = X.mean(axis=0)
     stds = X.std(axis=0)
@@ -430,13 +466,17 @@ def getXy_by_features(year, features, sex):
         X[:,i] = X[:,i] - means[i]
         if abs(stds[i]) > 1e-6:
             X[:,i] = X[:,i]/stds[i]    
-    
+
     return X, y, keys  
 
-def find_best_features(year, features, sex, heavy):
-    print 'find_best_features(year=%d,features=%s,sex=%s,heavy=%s)' % (year, features, sex, heavy)
-    X, y, keys = getXy_by_features(year, features, sex)
-    return select_features.get_most_predictive_feature_set(X, y, keys, heavy), keys  
+def find_best_features(year, features, sex, age, heavy):
+    """year=-1 => both years 2,3 """
+    print 'find_best_features(year=%d,features=%s,sex=%s,age=%s,heavy=%s)' % (year, features, sex,
+        age, heavy)
+    X, y, keys = getXy_by_features(year, features, sex, age)
+    title = 'features=%s,sex=%s,age=%s,year=%d' % (features,sex,age,year) 
+    results, n_samples = select_features.get_most_predictive_feature_set(title, X, y, keys, heavy)
+    return results, n_samples, keys  
 
 def compare_sexes(year):
     print 'compare_sexes(year=%d)' % year
@@ -490,7 +530,7 @@ if False:
     show_dih_counts(2)
     show_dih_counts(3)
 
-if True:
+if False:
     import os
     import random
     import ga
@@ -504,8 +544,8 @@ if True:
     features = 'all2'
     heavy = True
     
-    logname = os.path.join('results','features=%s.heavy=%s.pop=%d.results' % (features, 
-        heavy, ga.POPULATION_SIZE))
+    logname = os.path.join('results','features=%s.heavy=%s.pop=%d.normalized.all23.results' % (features, 
+                heavy, ga.POPULATION_SIZE))
     logfile = open(logname, 'wt')
     print 'logname=%s' % logname
        
@@ -528,36 +568,91 @@ if True:
     all_results_keys = {}
     for sex in ['f', 'm']:
         all_results_keys[sex] = {}
-        for year in (2,3):
-            common.SUBHEADING()
-            P('sex = %s, year = %d' % (sex, year))
-            all_results_keys[sex][year] = find_best_features(year, features, sex, heavy)
-            results, keys = all_results_keys[sex][year]
-            for j in sorted(results.keys()):
-                show_result(results, keys, j) 
-    
-    common.HEADING()    
+        for age in AGES:
+            all_results_keys[sex][age] = {}
+            for year in [-1,2,3]:
+                common.SUBHEADING()
+                all_results_keys[sex][age][year] = find_best_features(year, features, sex, age, heavy)
+                if False: # !@#$ debugging
+                    print all_results_keys[sex][age][year]
+                    print len(all_results_keys[sex][age][year]), '-' * 40
+                    print '0:', all_results_keys[sex][age][year][0]
+                    print '1:', all_results_keys[sex][age][year][1]
+                    print '2:', all_results_keys[sex][age][year][2]
+                    exit()
+                results, n_samples, keys = all_results_keys[sex][age][year]
+                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
+                for j in sorted(results.keys()):
+                    show_result(results, keys, j) 
+
     P('=' * 80)
-    
+
     for sex in sorted(all_results_keys.keys()):
-        for year in sorted(all_results_keys[sex].keys()):
-            P('sex = %s, year = %d' % (sex, year))
-            results, keys = all_results_keys[sex][year]
-            for j in sorted(results.keys()):
-                show_result(results, keys, j)        
+        for age in sorted(all_results_keys[sex].keys()):
+            for year in sorted(all_results_keys[sex][age].keys()):
+                results, n_samples, keys = all_results_keys[sex][age][year]
+                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
+                for j in sorted(results.keys()):
+                    show_result(results, keys,  j)        
+
+if False:
+    features = 'all2'
+    for sex in ['f', 'm']:
+        for age in AGES:
+            for year in (2,3):
+                make_predictions(year, features, sex)
             
 if False:
     features = 'all2'
     for sex in ['f', 'm']:
         for year in (2,3):
-            make_predictions(year, features, sex)
-            
-if False:
-    features = 'all2'
-    for sex in ['f', 'm']:
-        for year in (2,3):
-            compare_classifiers(year, features, sex)
+            compare_classifiers(year, features, sex, age)
 
 if False:
     for year in (2,3):
         compare_sexes(year)
+        
+if True:
+    import os
+    import random
+    import ga
+     # Set random seed so that each run gives same results
+    random.seed(333)
+    np.random.seed(333)
+    
+           
+    def P(s):
+        """Print string s"""
+        print s
+        logfile.write(s + '\n')
+    
+    classifier = predict.CompoundClassifier()
+    all_results_keys = {}
+    for sex in ['f', 'm']:
+        all_results_keys[sex] = {}
+        for age in AGES:
+            all_results_keys[sex][age] = {}
+            for year in [-1,2,3]:
+                common.SUBHEADING()
+                all_results_keys[sex][age][year] = find_best_features(year, features, sex, age, heavy)
+                if False: # !@#$ debugging
+                    print all_results_keys[sex][age][year]
+                    print len(all_results_keys[sex][age][year]), '-' * 40
+                    print '0:', all_results_keys[sex][age][year][0]
+                    print '1:', all_results_keys[sex][age][year][1]
+                    print '2:', all_results_keys[sex][age][year][2]
+                    exit()
+                results, n_samples, keys = all_results_keys[sex][age][year]
+                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
+                for j in sorted(results.keys()):
+                    show_result(results, keys, j) 
+
+    P('=' * 80)
+
+    for sex in sorted(all_results_keys.keys()):
+        for age in sorted(all_results_keys[sex].keys()):
+            for year in sorted(all_results_keys[sex][age].keys()):
+                results, n_samples, keys = all_results_keys[sex][age][year]
+                P('sex=%s, age=%s, year = %d : samples=%d' % (sex, age, year, n_samples))
+                for j in sorted(results.keys()):
+                    show_result(results, keys,  j)          

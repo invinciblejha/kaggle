@@ -252,7 +252,68 @@ def classify_by_method(title, Xr, yr, keys, get_classifier, plot):
     if plot:
         y_pred = classifier.predict(Xr)
         plot_classification(Xr, yr, y_pred, keys, title, classifier)
+        
+def get_trained_classifier( X, y, keys):
+    """Return classifier trained on X and y
+       X columns are typically a subset of a bigger X
+       No resampling as this is for part of a data set
+       """
+    print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
+    
+    #Xr, yr = select_features.resample_equal_y(X, y, 1.0)
+    
+    # Our current best classifier
+    classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
+    classifier.fit(X, y)
+    return classifier, keys
 
+class CompoundClassifier:
+    def __init__(self, keys, sex_key, age_key):
+        assert(sex_key in keys)
+        assert(age_key in keys)
+        self._entries = []
+        self._keys = keys
+        self._sex_key = sex_key
+        self._age_key = age_key
+
+    def add(self, classifier, keys, sex, age):
+        assert(all([k in self._keys for k in keys]))
+        self._entries.append({'classifier':classifier, 'keys':keys, 'sex':sex, 'age':age})
+        
+    def train(self, X, y, keys):
+        self.add(get_trained_classifier(X, y, keys)
+        
+    def get_classfier(self, sex, age):
+        for e in self._entries:
+            if e['sex'] == sex and e['age'] == age:
+                return e['classifier'], e['keys']
+        raise ValueError('No classifier for sex=%s,age=%s' % (sex, age)) 
+    
+    def show_all(self):
+        print 'keys=%s' 
+        for i,e in enumerate(self._entries):
+            print '%4d: %s' % (i, e)
+    
+    def predict(self, X, keys):
+        assert(all([k in self._keys for k in keys]))
+        
+        sex_index = keys.index(self._sex_key)
+        age_index = keys.index(self._age_key)
+    
+        def predict_one(x):
+            sex = x[sex_index]
+            age = x[age_index]
+            classifer, classifer_keys = self.get_classfier(sex, age)
+            key_indexes = [keys.index[k] for k in classifier_keys]
+            xc = x[key_indexes]
+            return classifier.predict(xc)
+
+        y = np.zeros(X.shape[0])
+        for in range(X.shape[0]):
+            y[i] = predict_one(X[i,:])
+            
+        return y 
+ 
 def classify(title, X, y, keys):
     print 'classify(title=%s, X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
 

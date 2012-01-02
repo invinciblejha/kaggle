@@ -58,9 +58,9 @@ if False:
     print 'logistic cv  ', scores_log, sum(scores_log)/len(scores_log)
     print 'logistic cv f', f_log, sum(f_log)/len(f_log)
 
-#_classifier = linear_model.LogisticRegression()
+_classifier = linear_model.LogisticRegression()
 #_classifier = neighbors.NeighborsClassifier(n_neighbors=5)
-_classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
+#_classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)  # SLOW
 
 def get_cv_score(X, y):
     #print 'get_cv_score: X=%s,y=%s' % (X.shape, y.shape) 
@@ -111,18 +111,20 @@ def resample_equal_y(X, y, fac):
     Xr, yr= shuffle(Xr, yr)    
     return Xr, yr
  
-def get_best_features(X, y, keys, heavy):
-    
-    print 'get_best_features(X=%s, y=%s, keys=%s, heavy=%s)' % (X.shape, y.shape, len(keys), heavy)
+def get_best_features(title, X, y, keys, heavy):
+
+    print 'get_best_features(title="%s", X=%s, y=%s, keys=%s, heavy=%s)' % (title, X.shape, y.shape, 
+        len(keys), heavy)
+
     num_features = X.shape[1]
-    
+
     def eval_func(chromosome):
         indexes = [chromosome[i] for i in range(len(chromosome))]
         Xf = X[:,indexes]
         score = get_cv_score(Xf, y)
         #print '  eval %.4f %3d %s' % (score, len(indexes), indexes)
         return score
-    
+
     allowed_values = range(num_features)
     all_results = {}
     best_genomes = None
@@ -147,11 +149,20 @@ def get_best_features(X, y, keys, heavy):
         best_genomes = [r['genome'] for r in results]    
     return all_results    
  
-def get_most_predictive_feature_set(X, y, keys, heavy):  
+def get_most_predictive_feature_set(title, X, y, keys, heavy):  
     common.SUBHEADING()
-    print 'get_most_predictive_feature_set(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, keys)
+    print 'get_most_predictive_feature_set(title=%s, X=%s, y=%s, keys=%s)' % (title, X.shape, y.shape, keys)
     X,y = resample_equal_y(X, y, 1.0)
-    return get_best_features(X, y, keys, heavy)
+    
+    # Normalize again
+    means = X.mean(axis=0)
+    stds = X.std(axis=0)
+    for i in range(X.shape[1]):
+        X[:,i] = X[:,i] - means[i]
+        if abs(stds[i]) > 1e-6:
+            X[:,i] = X[:,i]/stds[i] 
+    
+    return get_best_features(title, X, y, keys, heavy), y.size
 
 if __name__ == '__main__':
     test_cv()
