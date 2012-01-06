@@ -405,5 +405,21 @@ Confusion matrix:
          10390   3292
          7189    6493 
          
-Struggling with false negatives.         
+Struggling with false negatives.  
+
+Key selection on balanced +ve/-ve
+----------------------------------
+Classification report for all: 
+
+          cls   precision    recall  f1-score   support
+          0       0.56      0.48      0.52     13682
+          1       0.55      0.63      0.59     13682
+          avg     0.56      0.56      0.55     27364
+
+Confusion matrix:
+
+         6603 7079
+         5085 8597 
+         
+Filtering is not helping.       
         

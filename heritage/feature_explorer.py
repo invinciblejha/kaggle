@@ -417,6 +417,15 @@ def getXy_by_features_(year, features):
         y = np.r_[y2, y3]
     
     return X,y,keys
+    
+def filter_by_keys(X, keys, filter_keys):
+    filter_indexes = [(k in filter_keys) for k in keys]
+    
+    print 'X=%s,filter_indexes=%s' % (X.shape, len(filter_indexes))
+    Xout = X[:, np.array(filter_indexes)]
+    kout = [k for k in keys if k in filter_keys]
+    print 'Xout=%s,kout=%s' % (Xout.shape, len(kout))
+    return Xout, kout
 
 def getXy_by_sex_age(X,y,keys, sex, age, sex_boundary = 0.5, age_boundaries = [1, 79]):
     print 'getXy_by_sex_age(X=%s,y=%s,sex=%s,age=%s' % (X.shape, y.shape, sex, age)
@@ -644,8 +653,18 @@ if True:
     from sklearn.cross_validation import StratifiedKFold
     import ga
     import predict
-
-     # Set random seed so that each run gives same results
+    
+    DO_TOP_FEATURES = True
+    if DO_TOP_FEATURES:
+        top_features = {'m':{}, 'f':{}}
+        top_features['m'][AGE_LOW] = ['specialty=Surgery', 'place_svc=Independent Lab', 'place_svc=Urgent Care', 'pcg=INFEC4', 'pcg=MISCL5', 'pcg=SKNAUT']
+        top_features['m'][AGE_MEDIUM] = ['pcg=CANCRA', 'pcg=MISCHRT', 'pcg=NEUMENT', 'pcg=ODaBNCA', 'pcg=SKNAUT', 'pcg=TRAUMA', 'pcg=UTI'] 
+        top_features['m'][AGE_HIGH] = ['LabCount', 'proc_group=RAD', 'place_svc=Office', 'pcg=ARTHSPIN', 'pcg=FLaELEC', 'pcg=RENAL2']
+        top_features['f'][AGE_LOW] = ['charlson=CharlsonIndex', 'proc_group=MED', 'place_svc=Inpatient Hospital', 'place_svc=Office', 'pcg=HEMTOL', 'pcg=MISCL5', 'pcg=SKNAUT']
+        top_features['f'][AGE_MEDIUM] = ['pcg=CHF', 'pcg=METAB1', 'pcg=MSC2a3', 'pcg=PERVALV', 'pcg=RENAL3', 'pcg=ROAMI']
+        top_features['f'][AGE_HIGH] = ['DrugCount_DSFS', 'proc_group=SDS', 'specialty=None', 'pcg=MISCL5', 'pcg=NEUMENT', 'pcg=ODaBNCA', 'pcg=SKNAUT', 'pcg=TRAUMA']
+   
+   # Set random seed so that each run gives same results
     random.seed(333)
     np.random.seed(333)
 
@@ -676,6 +695,7 @@ if True:
 
     y_test_all = np.zeros(0)
     y_pred_all = np.zeros(0)
+       
 
     for i,(train, test) in enumerate(skf):
         X_train, y_train = Xr[train,:], yr[train]
@@ -695,7 +715,14 @@ if True:
             for age in AGES:
                 Xsa,ysa, ksa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, 
                     age_boundaries)
-                print 'X_train=%s,y_train=%s,ksa=%d' % (Xsa.shape, ysa.shape, len(ksa))
+                if DO_TOP_FEATURES:
+                    # Use only the best X columns
+                    #filtered_featurs = ['Sex', 'AgeAtFirstClaim']
+                    assert(Xsa.shape[1] == len(ksa))
+                    Xsa,ksa= filter_by_keys(Xsa, ksa, top_features[sex][age])
+                    assert(Xsa.shape[1] == len(ksa))
+                    
+                print 'Xsa=%s,Xsa=%s,ksa=%d' % (Xsa.shape, ysa.shape, len(ksa))
                 classifier.train(Xsa, ysa, ksa, sex, age)
 
         classifier.show_all()
