@@ -401,6 +401,7 @@ Classification report for all
           avg     0.63      0.62      0.61     27364
 
 Confusion matrix:
-        10390   3292
-        7189    6493 
+
+         10390   3292
+         7189    6493 
         
