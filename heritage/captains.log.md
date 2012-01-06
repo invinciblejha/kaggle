@@ -394,13 +394,13 @@ Models
 No key selection
 ----------------
 Classification report for all 
-             precision    recall  f1-score   support
 
+          cls   precision    recall  f1-score   support
           0       0.59      0.76      0.66     13682
           1       0.66      0.47      0.55     13682
-
-avg / total       0.63      0.62      0.61     27364
+          avg     0.63      0.62      0.61     27364
 
 Confusion matrix:
-[[10390  3292]
- [ 7189  6493]]                
+        10390   3292
+        7189    6493 
+        
