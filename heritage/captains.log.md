@@ -391,9 +391,9 @@ year = 3
                  
 Models
 ======
-No key selection
-----------------
-Classification report for all 
+No key selection on balanced +ve/-ve
+------------------------------------
+Classification report for all: 
 
           cls   precision    recall  f1-score   support
           0       0.59      0.76      0.66     13682
@@ -404,4 +404,6 @@ Confusion matrix:
 
          10390   3292
          7189    6493 
+         
+Struggling with false negatives.         
         
