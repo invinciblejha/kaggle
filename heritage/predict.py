@@ -299,11 +299,11 @@ class CompoundClassifier:
         self.add(get_trained_classifier(X, y, keys), keys, sex_class, age_class)
         assert(X.shape[1] == len(keys))
 
-    def get_classfier(self, sex, age):
+    def get_classifier(self, sex, age):
         sex_class = self.get_sex_class(sex)
         age_class = self.get_age_class(age)
         for i,e in enumerate(self._entries):
-            print '--%4d: %s %s' % (i, e['sex'], e['age'])
+            #print '--%4d: %s %s' % (i, e['sex'], e['age'])
             if e['sex'] == sex_class and e['age'] == age_class:
                 return e['classifier'], e['keys'] 
         raise ValueError('No classifier for sex=%s,age=%s (sex_class=%s, age_class=%d)' % (sex, age,
@@ -323,10 +323,10 @@ class CompoundClassifier:
         def predict_one(x):
             sex = x[sex_index]
             age = x[age_index]
-            classifier, classifier_keys = self.get_classfier(sex, age)
-            print 'classifier:', classifier
+            classifier, classifier_keys = self.get_classifier(sex, age)
+            #print 'classifier:', classifier
             key_indexes = np.array([(k in classifier_keys) for k in self._keys])
-            print 'key_indexes = %s' % key_indexes
+            #print 'key_indexes = %s' % key_indexes
             xc = x[key_indexes]
             return classifier.predict(xc)
 

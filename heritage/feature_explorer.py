@@ -640,6 +640,7 @@ if False:
 if True:
     import os
     import random
+    from sklearn import metrics
     from sklearn.cross_validation import StratifiedKFold
     import ga
     import predict

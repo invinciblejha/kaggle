@@ -387,3 +387,20 @@ year = 3
               STROKE,     501,     669 0.43 0.57
               TRAUMA,    7378,    8070 0.48 0.52
                  UTI,    1967,    7911 0.20 0.80 >                 
+                 
+                 
+Models
+======
+No key selection
+----------------
+Classification report for all 
+             precision    recall  f1-score   support
+
+          0       0.59      0.76      0.66     13682
+          1       0.66      0.47      0.55     13682
+
+avg / total       0.63      0.62      0.61     27364
+
+Confusion matrix:
+[[10390  3292]
+ [ 7189  6493]]                
