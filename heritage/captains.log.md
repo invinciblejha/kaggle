@@ -405,7 +405,7 @@ Confusion matrix:
          10390   3292
          7189    6493 
          
-Struggling with false negatives.  
+Struggling with low true positives, mainly due to false negatives.  
 
 Key selection on balanced +ve/-ve
 ----------------------------------
@@ -421,5 +421,5 @@ Confusion matrix:
          6603 7079
          5085 8597 
          
-Filtering is not helping.       
+Filtering improves the true positive rate and causes a larger drop in the true negative rate.       
         
