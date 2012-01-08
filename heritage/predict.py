@@ -257,6 +257,7 @@ def get_trained_classifier(X, y, keys):
     """Return classifier trained on X and y
        X columns are typically a subset of a bigger X
        No resampling as this is for part of a data set
+       NOTE use of "class_weight = 'auto'" for unbalanced data set
        """
     print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
     
@@ -264,7 +265,7 @@ def get_trained_classifier(X, y, keys):
     
     # Our current best classifier
     classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
-    classifier.fit(X, y)
+    classifier.fit(X, y, class_weight = 'auto')
     return classifier
 
 class CompoundClassifier:
@@ -278,6 +279,9 @@ class CompoundClassifier:
         self._sex_boundary = sex_boundary
         self._age_boundaries = age_boundaries
         
+    def __repr__(self):
+        return str(self._entries)
+    
     def get_sex_class(self, sex):
         return 'm' if sex < self._sex_boundary else 'f'
         
