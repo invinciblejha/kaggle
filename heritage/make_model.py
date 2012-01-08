@@ -331,7 +331,26 @@ def get_trained_classifier(X, y, keys):
     classifier.fit(X, y, class_weight = 'auto')
     return classifier
     
+"""
+    y= 0: 101462
+    y= 1:   6259
+    y= 2:   2576
+    y= 3:   1663
+    y= 4:    989
+    y= 5:    551
+    y= 6:    340
+    y= 7:    249
+    y= 8:    185
+    y= 9:    146
+    y=10:    129
+    y=11:     90
+    y=12:     82
+    y=13:     67
+    y=14:     37
+    y=15:    319
+"""    
 THESHOLDS = [0, 1, 2, 4, 8, 16]    
+
 def get_trained_classifier2(X, y, keys):
     """Return classifier trained on X and y
        X columns are typically a subset of a bigger X
@@ -345,7 +364,7 @@ def get_trained_classifier2(X, y, keys):
     for threshold in THESHOLDS[:-1]:
         classifiers[threshold] = get_trained_classifier(X, y > threshold, keys)
         print 'threshold=%2d: %6d' % (threshold, (y > threshold).sum())
-    exit()    
+        
     return classifiers    
 
 def make_prediction2(classifiers, x):
@@ -574,7 +593,7 @@ if __name__ == '__main__':
     X,y,keys = getXy_by_features_(-1, features)
     print 'unique y values = %s' % np.unique(y)
     for i in np.unique(y):
-        print 'y=%2d: %5d' % (i, (y==i).sum())
+        print 'y=%2d: %6d' % (i, (y==i).sum())
     exit()
     run_model(X, y, keys)
     
