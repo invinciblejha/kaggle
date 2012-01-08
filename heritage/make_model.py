@@ -361,11 +361,13 @@ def get_trained_classifier2(X, y, keys):
     print 'get_trained_classifier2(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
     
     classifiers = {}
+    classes = {}
     for threshold in THESHOLDS[:-1]:
         classifiers[threshold] = get_trained_classifier(X, y > threshold, keys)
+        classes[threshold] = (y > threshold).sum()
         print 'threshold=%2d: %6d' % (threshold, (y > threshold).sum())
         
-    return classifiers    
+    return classifiers, classes    
 
 def make_prediction2(classifiers, x):
     """Make numeric prediction based on cascading classifiers""" 
@@ -391,7 +393,8 @@ class CompoundClassifier:
         self._age_boundaries = age_boundaries
         
     def __repr__(self):
-        return str(self._entries)
+        def s(e): return '  sex=%s,age=%s:%s' % (e['sex'],e['age'],e['classes'])
+        return 'classifer\n' + '\n'.join([s(e) for e in self._entries])
     
     def get_sex_class(self, sex):
         return 'm' if sex < self._sex_boundary else 'f'
@@ -404,23 +407,20 @@ class CompoundClassifier:
         else:  
             return AGE_MEDIUM
 
-    def _add(self, classifier, keys, sex_class, age_class):
+    def _add(self, classifier, classes, keys, sex_class, age_class):
         assert(all([k in self._keys for k in keys]))
-        self._entries.append({'classifier':classifier, 'keys':keys, 'sex':sex_class, 'age':age_class})
+        self._entries.append({'classifier':classifier, 'classes':classes, 
+            'keys':keys, 'sex':sex_class, 'age':age_class})
 
     def train(self, X, y, keys, sex_class, age_class):
+        """Train a classifier, y is a boolean array"""
+        print 'train(X=%s,y=%s,keys=%s' % (X.shape, y.shape, len(keys))
         if not self._do_regression:
-            """Train a classifier, y is a boolean array"""
-            print 'train(X=%s,y=%s,keys=%s' % (X.shape, y.shape, len(keys))
-         
             self._add(get_trained_classifier(X, y, keys), keys, sex_class, age_class)
-            assert(X.shape[1] == len(keys))
-        else:    
-            """Train a regressor, y is a numeric array"""
-            print 'train2(X=%s,y=%s,keys=%s' % (X.shape, y.shape, len(keys))
-         
-            self._add(get_trained_classifier2(X, y, keys), keys, sex_class, age_class)
-            assert(X.shape[1] == len(keys))    
+        else: 
+            classifier, classes = get_trained_classifier2(X, y, keys)
+            self._add(classifier, classes, keys, sex_class, age_class)
+        assert(X.shape[1] == len(keys))    
 
     def get_classifier(self, sex, age):
         sex_class = self.get_sex_class(sex)
@@ -594,7 +594,7 @@ if __name__ == '__main__':
     print 'unique y values = %s' % np.unique(y)
     for i in np.unique(y):
         print 'y=%2d: %6d' % (i, (y==i).sum())
-    exit()
+    
     run_model(X, y, keys)
     
     
