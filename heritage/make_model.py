@@ -260,11 +260,8 @@ def getXy_by_sex_age(X,y,keys, sex, age, sex_boundary = 0.5, age_boundaries = [1
     if age == AGE_LOW or age == AGE_HIGH:
         significant[age_key] = False
 
-    #print 'Removing keys < %d: %s' % (LOW_COUNT_THRESHOLD, [keys[i] for i in range(len(keys)) if not significant[i]])
-    #print 'keys=%d X=%s => ' % (len(keys), X.shape),    
     keys = [keys[i] for i in range(len(keys)) if significant[i]]
     X = X[:,significant] 
-    #print 'keys=%d X=%s' % (len(keys), X.shape) 
 
     return X,y,keys
 
@@ -324,7 +321,7 @@ def get_trained_classifier(X, y, keys):
        No resampling as this is for part of a data set
        NOTE use of "class_weight = 'auto'" for unbalanced data set
        """
-    print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
+    #print 'get_trained_classifier(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
    
     # Our current best classifier
     classifier = svm.SVC(kernel='rbf', C=0.5, gamma=0.1)
@@ -351,6 +348,11 @@ def get_trained_classifier(X, y, keys):
 """    
 THESHOLDS = [0, 1, 2, 4, 8, 16]    
 
+def show_dist(title, y):
+    print 'show_dist "%s": num=%d, unique=%s' % (title, y.size, np.unique(y))
+    for i in np.unique(y):
+        print ' y=%2d: %6d' % (i, (y==i).sum())
+
 def get_trained_classifier2(X, y, keys):
     """Return classifier trained on X and y
        X columns are typically a subset of a bigger X
@@ -359,13 +361,16 @@ def get_trained_classifier2(X, y, keys):
        NOTE use of "class_weight = 'auto'" for unbalanced data set
        """
     print 'get_trained_classifier2(X=%s, y=%s, keys=%s)' % (X.shape, y.shape, len(keys))
-    
+    show_dist('y', y)
     classifiers = {}
     classes = {}
+    last = 0
     for threshold in THESHOLDS[:-1]:
         classifiers[threshold] = get_trained_classifier(X, y > threshold, keys)
-        classes[threshold] = (y > threshold).sum()
-        print 'threshold=%2d: %6d' % (threshold, (y > threshold).sum())
+        n = (y > threshold).sum()
+        classes[threshold] = n
+        print ' threshold=%2d: %6d %6d' % (threshold, n, n - last)
+        last += n
         
     return classifiers, classes    
 
@@ -487,8 +492,9 @@ def run_model(X, y, keys):
         print s
         #logfile.write(s + '\n')
  
-    Xr, yr = select_features.resample_equal_y(X, y, 1.0)
-    Xr, yr = normalize(Xr, yr)
+    #Xr, yr = select_features.resample_equal_y(X, y, 1.0)
+    #Xr, yr = normalize(Xr, yr)
+    Xr, yr = X, y
 
     sex_vals = np.unique(Xr[:,keys.index('Sex')])
     age_vals = np.unique(Xr[:,keys.index('AgeAtFirstClaim')])
@@ -499,15 +505,16 @@ def run_model(X, y, keys):
     print 'sex_boundary = %s' % sex_boundary
     print 'age_boundaries = %s' % age_boundaries
 
-        
     def make_classifier(X_train, y_train):
         classifier = CompoundClassifier(DO_REGRESSION, keys, 'Sex', 'AgeAtFirstClaim', 
             sex_boundary, age_boundaries)
       
         for sex in ['f', 'm']:
             for age in AGES:
-                Xsa,ysa, ksa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, 
+                show_dist('y_train', y_train)
+                Xsa,ysa,ksa = getXy_by_sex_age(X_train, y_train, keys, sex, age, sex_boundary, 
                     age_boundaries)
+                show_dist('ysa', ysa)    
                 if DO_TOP_FEATURES:
                     # Use only the best X columns
                     assert(Xsa.shape[1] == len(ksa))
@@ -517,7 +524,7 @@ def run_model(X, y, keys):
                 print 'Xsa=%s,Xsa=%s,ksa=%d' % (Xsa.shape, ysa.shape, len(ksa))
                 classifier.train(Xsa, ysa, ksa, sex, age)
 
-        classifier.show_all() 
+        #classifier.show_all() 
         return classifier
         
     if False:
